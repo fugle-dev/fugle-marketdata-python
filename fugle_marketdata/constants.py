@@ -1,0 +1,11 @@
+FUGLE_MARKETDATA_API_REST_BASE_URL = 'https://api.fugle.tw/marketdata'
+FUGLE_MARKETDATA_API_WEBSOCKET_BASE_URL = 'wss://api.fugle.tw/marketdata'
+FUGLE_MARKETDATA_API_VERSION = 'v1.0'
+
+CONNECT_EVENT = 'connect'
+DISCONNECT_EVENT = 'disconnect'
+MESSAGE_EVENT = 'message'
+ERROR_EVENT = 'error'
+AUTHENTICATED_EVENT = 'authenticated'
+UNAUTHENTICATED_EVENT = 'unauthenticated'
+UNAUTHENTICATED_MESSAGE = 'Invalid authentication credentials'
