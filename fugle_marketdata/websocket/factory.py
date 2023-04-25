@@ -1,4 +1,5 @@
 from fugle_marketdata.client_factory import ClientFactory
+from .futopt import WebSocketFutOptClient
 from .stock import WebSocketStockClient
 from ..constants import FUGLE_MARKETDATA_API_WEBSOCKET_BASE_URL, FUGLE_MARKETDATA_API_VERSION
 
@@ -12,9 +13,9 @@ class WebSocketClientFactory(ClientFactory):
     def stock(self):
         return self.get_client('stock')
 
-    # @property
-    # def futopt(self):
-    #     return self.get_client('futopt')
+    @property
+    def futopt(self):
+        return self.get_client('futopt')
 
     def get_client(self, type):
 
@@ -25,8 +26,8 @@ class WebSocketClientFactory(ClientFactory):
         
         if type == 'stock': 
             client = WebSocketStockClient(base_url=base_url, **self.options)
-        # elif type == 'futopt' :
-        #     client = new RestFutOptClient({ ...this.options, baseUrl });
+        elif type == 'futopt' :
+            client = WebSocketFutOptClient(base_url=base_url, **self.options)
         else: 
             None
 

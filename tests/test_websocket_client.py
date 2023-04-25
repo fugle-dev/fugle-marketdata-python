@@ -1,6 +1,20 @@
+import threading
 from fugle_marketdata import WebSocketClient
+from fugle_marketdata.websocket.futopt.client import WebSocketFutOptClient
+from fugle_marketdata.websocket.stock.client import WebSocketStockClient
 import pytest
-# import websocket
+import websocket
+import asyncio
+
+
+@pytest.fixture
+def api_key_client():
+    return WebSocketClient(api_key='api-key')
+
+
+@pytest.fixture
+def bearer_client():
+    return WebSocketClient(bearer_token='bearer-token')
 
 
 class TestWebSocketClientConstructor(object):
@@ -25,3 +39,15 @@ class TestWebSocketClientConstructor(object):
             WebSocketClient(api_key='api-key', bearer_token='bearer-token')
 
 
+class TestWebSocketClient:
+
+    def test_return_web_socket_stock_client(self):
+        client = WebSocketClient(api_key='api-key')
+        stock = client.stock
+        assert isinstance(stock, WebSocketStockClient)
+
+
+    def test_return_web_socket_stock_client(self):
+        client = WebSocketClient(api_key='api-key')
+        futopt = client.futopt
+        assert isinstance(futopt, WebSocketFutOptClient)
