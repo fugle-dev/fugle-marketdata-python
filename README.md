@@ -49,17 +49,33 @@ from fugle_marketdata import WebSocketClient, RestClient
 import asyncio
 
 def handle_message(message):
-    print(message)
+    print(f'message: {message}')
+
+
+def handle_connect():
+    print('connected')
+
+
+def handle_disconnect(code, message):
+    print(f'disconnect: {code}, {message}')
+
+
+def handle_error(error):
+    print(f'error: {error}')
 
 async def main():
     client = WebSocketClient(api_key = 'YOUR_API_KEY')
     stock = client.stock
+    stock.on("connect", handle_connect)
     stock.on("message", handle_message)
+    stock.on("disconnect", handle_disconnect)
+    stock.on("error", handle_error)
     await stock.connect()
     stock.subscribe({ 
         "channel": 'trades', 
         "symbol": '2330' 
         })
+
 if __name__ == "__main__":
     asyncio.run(main())
 
