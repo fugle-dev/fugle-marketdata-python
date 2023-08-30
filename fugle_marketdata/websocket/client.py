@@ -2,16 +2,18 @@ import asyncio
 import json
 import websocket
 from pyee import EventEmitter
+import sys
 
 from ..constants import (
-    CONNECT_EVENT, 
-    DISCONNECT_EVENT, 
-    MESSAGE_EVENT, 
-    ERROR_EVENT, 
-    AUTHENTICATED_EVENT, 
-    UNAUTHENTICATED_EVENT, 
+    CONNECT_EVENT,
+    DISCONNECT_EVENT,
+    MESSAGE_EVENT,
+    ERROR_EVENT,
+    AUTHENTICATED_EVENT,
+    UNAUTHENTICATED_EVENT,
     UNAUTHENTICATED_MESSAGE
 )
+
 
 class WebSocketClient():
     def __init__(self, **config):
@@ -21,13 +23,13 @@ class WebSocketClient():
         self.ee.on(CONNECT_EVENT, self.__authenticate)
         self.__ws = websocket.WebSocketApp(
             self.config.get('base_url'),
-            on_open=self.on_open,
-            on_close=self.on_close,
-            on_error=self.on_error,
-            on_message=self.on_message)
+            on_open=self.__on_open,
+            on_close=self.__on_close,
+            on_error=self.__on_error,
+            on_message=self.__on_message)
         self.loop = asyncio.get_event_loop()
         self.future = self.loop.create_future()
-        
+
     def subscribe(self, params):
         message = {
             "event": "subscribe",
@@ -42,7 +44,7 @@ class WebSocketClient():
         }
         self.__send(message)
 
-    def __authenticate(self, ws):
+    def __authenticate(self):
         if self.config.get('api_key'):
             auth_info = {
                 'event': 'auth',
@@ -57,22 +59,21 @@ class WebSocketClient():
                     'token': self.config['bearer_token']
                 }
             }
-        else: 
-            None # error
+        else:
+            None  # error
 
         self.__send(auth_info)
 
     def __send(self, message):
-        print(message)
         self.__ws.send(json.dumps(message))
 
-    def on_open(self, ws):
-        self.ee.emit(CONNECT_EVENT, ws)
+    def __on_open(self, ws):
+        self.ee.emit(CONNECT_EVENT)
 
-    def on_close(self, close_status_code, close_msg):
-        self.ee.emit(DISCONNECT_EVENT, close_msg)
+    def __on_close(self, ws, close_status_code, close_msg):
+        self.ee.emit(DISCONNECT_EVENT, close_status_code, close_msg)
 
-    def on_message(self, ws, data):
+    def __on_message(self, ws, data):
         message = json.loads(data)
         self.ee.emit(MESSAGE_EVENT, data)
         if message['event'] == AUTHENTICATED_EVENT:
@@ -81,12 +82,12 @@ class WebSocketClient():
         elif message['event'] == ERROR_EVENT:
             if message['data'] and message['data']['message'] == UNAUTHENTICATED_MESSAGE:
                 self.ee.emit(UNAUTHENTICATED_EVENT, message)
-                self.loop.call_soon_threadsafe(self.future.set_exception, 'login fail')
-       
+                self.loop.call_soon_threadsafe(
+                    self.future.set_exception, 'login fail')
 
-    def on_error(self, ws, error):
-        self.ee.emit("error", ws, error)
-
+    def __on_error(self, ws, error):
+        self.ee.emit(ERROR_EVENT, error)
+        
     def on(self, event, listener):
         self.ee.on(event, listener)
 
