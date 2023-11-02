@@ -1,4 +1,4 @@
-from fugle_marketdata.client_factory import ClientFactory
+from ..client_factory import ClientFactory
 from .futopt import WebSocketFutOptClient
 from .stock import WebSocketStockClient
 from ..constants import FUGLE_MARKETDATA_API_WEBSOCKET_BASE_URL, FUGLE_MARKETDATA_API_VERSION

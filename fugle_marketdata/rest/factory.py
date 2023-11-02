@@ -1,4 +1,4 @@
-from fugle_marketdata.client_factory import ClientFactory
+from ..client_factory import ClientFactory
 from ..constants import FUGLE_MARKETDATA_API_REST_BASE_URL, FUGLE_MARKETDATA_API_VERSION
 from .stock import RestStockClient
 from .futopt import RestFutOptClient
