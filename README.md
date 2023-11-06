@@ -1,13 +1,6 @@
-[![PyPI version][pypi-image]][pypi-url]
-[![Python version][python-image]][python-url]
-[![Build Status][action-image]][action-url]
 # Fugle MarketData
 
-[![PyPI version][pypi-image]][pypi-url]
-[![Python version][python-image]][python-url]
-[![Build Status][action-image]][action-url]
-
-> Fugle MarketData API client library for Node.js
+> Fugle MarketData API client library for Python
 
 ## Installation
 
@@ -29,12 +22,6 @@ The library is an isomorphic Python client that supports REST API and WebSocket.
 ### REST API
 
 ```py
-
-# def main():
-#     client = RestClient(api_key=TOKEN)
-#     stock = client.stock
-#     print(stock.intraday.quote(symbol="2330"))
-
 
 client = RestClient(api_key = 'YOUR_API_KEY')
 stock = client.stock  # Stock REST API client
