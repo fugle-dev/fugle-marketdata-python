@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/fugle-dev/fugle-marketdata-python/compare/1.0.1...1.0.2) (2023-11-13)
+
+
+### Bug Fixes
+
+* wording in docs and tweak import path ([3eeecbb](https://github.com/fugle-dev/fugle-marketdata-python/commit/3eeecbbc14514606c75968b1c797c086bce22c45))
+
 ## [1.0.1](https://github.com/fugle-dev/fugle-marketdata-python/compare/b0bbb3ba12026fcd82b20f6da4242ffc0c306133...1.0.1) (2023-08-30)
 
 
