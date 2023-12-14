@@ -43,6 +43,13 @@ class WebSocketClient():
             "data": params
         }
         self.__send(message)
+    
+    def ping(self, params):
+        message = {
+            "event": "ping",
+            "data": params
+        }
+        self.__send(message)
 
     def __authenticate(self):
         if self.config.get('api_key'):
