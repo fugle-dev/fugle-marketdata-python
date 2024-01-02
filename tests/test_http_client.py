@@ -253,20 +253,13 @@ class TestStockRestSnapshotClient:
 class TestFutOptRestIntradayClient:
     def test_futopt_intraday(self, api_key_client):
         futopt = api_key_client.futopt
-        assert hasattr(futopt.intraday, 'contracts')
         assert hasattr(futopt.intraday, 'products')
+        assert hasattr(futopt.intraday, 'tickers')
         assert hasattr(futopt.intraday, 'ticker')
         assert hasattr(futopt.intraday, 'quote')
         assert hasattr(futopt.intraday, 'candles')
-
-    def test_intraday_contracts_api_key(self, mocker, api_key_client):
-        futopt = api_key_client.futopt
-        mock_get = mocker.patch('requests.get')
-        futopt.intraday.contracts(type='OPTION')
-        mock_get.assert_called_once_with(
-            'https://api.fugle.tw/marketdata/v1.0/futopt/intraday/contracts?type=OPTION',
-            headers={'X-API-KEY': 'api-key'}
-        )
+        assert hasattr(futopt.intraday, 'trades')
+        assert hasattr(futopt.intraday, 'volumes')
 
     def test_intraday_products_api_key(self, mocker, api_key_client):
         futopt = api_key_client.futopt
@@ -274,6 +267,15 @@ class TestFutOptRestIntradayClient:
         futopt.intraday.products(type='OPTION')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/futopt/intraday/products?type=OPTION',
+            headers={'X-API-KEY': 'api-key'}
+        )
+    
+    def test_intraday_tickers_api_key(self, mocker, api_key_client):
+        futopt = api_key_client.futopt
+        mock_get = mocker.patch('requests.get')
+        futopt.intraday.tickers(type='OPTION')
+        mock_get.assert_called_once_with(
+            'https://api.fugle.tw/marketdata/v1.0/futopt/intraday/tickers?type=OPTION',
             headers={'X-API-KEY': 'api-key'}
         )
     
@@ -304,4 +306,20 @@ class TestFutOptRestIntradayClient:
             headers={'X-API-KEY': 'api-key'}
         )
 
-    
+    def test_intraday_trades_api_key(self, mocker, api_key_client):
+        futopt = api_key_client.futopt
+        mock_get = mocker.patch('requests.get')
+        futopt.intraday.trades(symbol='2330')
+        mock_get.assert_called_once_with(
+            'https://api.fugle.tw/marketdata/v1.0/futopt/intraday/trades/2330',
+            headers={'X-API-KEY': 'api-key'}
+        )
+
+    def test_intraday_volumes_api_key(self, mocker, api_key_client):
+        futopt = api_key_client.futopt
+        mock_get = mocker.patch('requests.get')
+        futopt.intraday.volumes(symbol='2330')
+        mock_get.assert_called_once_with(
+            'https://api.fugle.tw/marketdata/v1.0/futopt/intraday/volumes/2330',
+            headers={'X-API-KEY': 'api-key'}
+        )
