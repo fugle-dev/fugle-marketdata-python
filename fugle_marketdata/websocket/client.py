@@ -1,8 +1,9 @@
-import asyncio
+import time
 import json
 import websocket
 from pyee import EventEmitter
-import sys
+from threading import Thread, Timer
+from typing import Generic, TypeVar
 
 from ..constants import (
     CONNECT_EVENT,
@@ -14,11 +15,41 @@ from ..constants import (
     UNAUTHENTICATED_MESSAGE
 )
 
+T = TypeVar('T')
+E = TypeVar('E')
+
+
+class Ok(Generic[T]):
+    def __init__(self, value: T):
+        self.value = value
+
+    def is_ok(self):
+        return True
+
+    def is_err(self):
+        return False
+
+    def __repr__(self):
+        return f"Ok({repr(self.value)})"
+
+
+class Err(Generic[E]):
+    def __init__(self, error: E):
+        self.error = error
+
+    def is_ok(self):
+        return False
+
+    def is_err(self):
+        return True
+
+    def __repr__(self):
+        return f"Err({repr(self.error)})"
+
 
 class WebSocketClient():
     def __init__(self, **config):
         self.config = config
-        # config: base_url, api_key?, bearer_token?
         self.ee = EventEmitter()
         self.ee.on(CONNECT_EVENT, self.__authenticate)
         self.__ws = websocket.WebSocketApp(
@@ -27,8 +58,17 @@ class WebSocketClient():
             on_close=self.__on_close,
             on_error=self.__on_error,
             on_message=self.__on_message)
-        self.loop = asyncio.get_event_loop()
-        self.future = self.loop.create_future()
+
+        self.auth_result = None
+
+    def ping(self, message):
+        message = {
+            "event": "ping",
+            "data": {
+                "state": message
+            }
+        }
+        self.__send(message)
 
     def subscribe(self, params):
         message = {
@@ -40,13 +80,6 @@ class WebSocketClient():
     def unsubscribe(self, params):
         message = {
             "event": "unsubscribe",
-            "data": params
-        }
-        self.__send(message)
-    
-    def ping(self, params):
-        message = {
-            "event": "ping",
             "data": params
         }
         self.__send(message)
@@ -85,26 +118,34 @@ class WebSocketClient():
         self.ee.emit(MESSAGE_EVENT, data)
         if message['event'] == AUTHENTICATED_EVENT:
             self.ee.emit(AUTHENTICATED_EVENT, message)
-            self.loop.call_soon_threadsafe(self.future.set_result, 'success')
+            self.auth_result = Ok("success")
         elif message['event'] == ERROR_EVENT:
             if message['data'] and message['data']['message'] == UNAUTHENTICATED_MESSAGE:
                 self.ee.emit(UNAUTHENTICATED_EVENT, message)
-                self.loop.call_soon_threadsafe(
-                    self.future.set_exception, 'login fail')
+                self.auth_result = Err(UNAUTHENTICATED_MESSAGE)
 
     def __on_error(self, ws, error):
         self.ee.emit(ERROR_EVENT, error)
-        
+
     def on(self, event, listener):
         self.ee.on(event, listener)
 
     def off(self, event, listener):
         self.ee.off(event, listener)
 
-    async def connect(self):
-        self.loop.run_in_executor(None, self.__ws.run_forever)
-        await self.future
+    def connect(self):
+        Thread(target=self.__ws.run_forever).start()
+        while True:
+            time.sleep(50/1000)
+            if self.auth_result is not None:
+                break
+
+        if self.auth_result.is_ok():
+            return ""
+        elif self.auth_result.is_err():
+            raise Exception(self.auth_result.error)
 
     def disconnect(self):
         if self.__ws is not None:
             self.__ws.close()
+            self.auth_result = None

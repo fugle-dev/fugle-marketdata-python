@@ -31,9 +31,8 @@ print(stock.intraday.quote(symbol="2330"))
 ### WebSocket API
 
 ```py
-
 from fugle_marketdata import WebSocketClient, RestClient
-import asyncio
+
 
 def handle_message(message):
     print(f'message: {message}')
@@ -50,25 +49,26 @@ def handle_disconnect(code, message):
 def handle_error(error):
     print(f'error: {error}')
 
-async def main():
-    client = WebSocketClient(api_key = 'YOUR_API_KEY')
+
+def main():
+    client = WebSocketClient(api_key='YOUR_API_KEY')
     stock = client.stock
     stock.on("connect", handle_connect)
     stock.on("message", handle_message)
     stock.on("disconnect", handle_disconnect)
     stock.on("error", handle_error)
-    await stock.connect()
-    stock.subscribe({ 
-        "channel": 'trades', 
-        "symbol": '2330' 
-        })
+    stock.connect()
+    stock.subscribe({
+        "channel": 'trades',
+        "symbol": '2330'
+    })
+
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
 
 ```
 
 ## License
 
 [MIT](LICENSE)
-
