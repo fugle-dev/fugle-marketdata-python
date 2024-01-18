@@ -1,5 +1,12 @@
 # Changelog
 
+# [2.0.0](https://github.com/fugle-dev/fugle-marketdata-python/compare/1.1.0...2.0.0) (2024-01-18)
+
+
+### Refactors
+
+* WebSocket originally used asyncio, now switched to synchronous ([3384741](https://github.com/fugle-dev/fugle-marketdata-python/commit/3384741fe009b81c5a2b8cf9b66d004b3b4381ea))
+
 # [1.1.0](https://github.com/fugle-dev/fugle-marketdata-python/compare/1.0.2...1.1.0) (2023-12-19)
 
 
