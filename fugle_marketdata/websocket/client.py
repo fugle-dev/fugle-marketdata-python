@@ -6,6 +6,7 @@ from threading import Thread, Timer
 from typing import Generic, TypeVar
 
 from ..constants import (
+    AUTHENTICATION_TIMEOUT_MESSAGE,
     CONNECT_EVENT,
     DISCONNECT_EVENT,
     MESSAGE_EVENT,
@@ -142,7 +143,11 @@ class WebSocketClient():
 
     def connect(self):
         Thread(target=self.__ws.run_forever).start()
+        auth_timer = 0
         while True:
+            if auth_timer > 5000:
+                self.auth_result = Err(AUTHENTICATION_TIMEOUT_MESSAGE)
+            auth_timer += 50
             time.sleep(50/1000)
             if self.auth_result is not None:
                 break
