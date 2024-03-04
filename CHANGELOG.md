@@ -1,5 +1,12 @@
 # Changelog
 
+# [2.1.0](https://github.com/fugle-dev/fugle-marketdata-python/compare/2.0.0...2.1.0) (2024-03-04)
+
+
+### Features
+
+* add subscriptions method for WebSocket client ([5176960](https://github.com/fugle-dev/fugle-marketdata-python/commit/5176960ce4c24f25ee1064f45306f3bcc6c27447))
+
 # [2.0.0](https://github.com/fugle-dev/fugle-marketdata-python/compare/1.1.0...2.0.0) (2024-01-18)
 
 
