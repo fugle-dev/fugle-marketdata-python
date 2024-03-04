@@ -84,6 +84,13 @@ class WebSocketClient():
         }
         self.__send(message)
 
+    def subscriptions(self):
+        message = {
+            "event": "subscriptions"
+        }
+        self.__send(message)
+
+
     def __authenticate(self):
         if self.config.get('api_key'):
             auth_info = {
