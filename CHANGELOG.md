@@ -1,5 +1,7 @@
 # Changelog
 
+## [2.1.1](https://github.com/fugle-dev/fugle-marketdata-python/compare/2.1.0...2.1.1) (2024-03-11)
+
 # [2.1.0](https://github.com/fugle-dev/fugle-marketdata-python/compare/2.0.0...2.1.0) (2024-03-04)
 
 
