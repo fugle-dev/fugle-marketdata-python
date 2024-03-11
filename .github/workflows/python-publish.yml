@@ -28,7 +28,7 @@ jobs:
       - name: Run image
         uses: abatilo/actions-poetry@v2.0.0
         with:
-          poetry-version: '1.4.2'
+          poetry-version: '1.8.2'
       - name: Build package
         run: poetry build
       - name: Publish package
