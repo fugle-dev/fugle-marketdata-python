@@ -1,11 +1,11 @@
 from ..base_rest import BaseRest
 
 class Intraday(BaseRest):
-    def contracts(self, **params):
-        return self.request(f"intraday/contracts", **params)
-    
     def products(self, **params):
         return self.request(f"intraday/products", **params)
+    
+    def tickers(self, **params):
+        return self.request(f"intraday/tickers", **params)
     
     def ticker(self, **params):
         symbol = params.pop('symbol')
@@ -18,3 +18,11 @@ class Intraday(BaseRest):
     def candles(self, **params):
         symbol = params.pop('symbol')
         return self.request(f"intraday/candles/{symbol}", **params)
+    
+    def trades(self, **params):
+        symbol = params.pop('symbol')
+        return self.request(f"intraday/trades/{symbol}", **params)
+    
+    def volumes(self, **params):
+        symbol = params.pop('symbol')
+        return self.request(f"intraday/volumes/{symbol}", **params)

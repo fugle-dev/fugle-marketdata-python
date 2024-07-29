@@ -1,4 +1,5 @@
 from .intraday import Intraday
+from .historical import Historical
 
 
 
@@ -11,3 +12,6 @@ class RestFutOptClient:
     def intraday(self):
         return Intraday(**self.config)
     
+    @property
+    def historical(self):
+        return Historical(**self.config)
