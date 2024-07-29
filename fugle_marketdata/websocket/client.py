@@ -1,9 +1,7 @@
-import time
 import json
 import websocket
 from pyee import EventEmitter
 from threading import Thread, Timer
-from typing import Generic, TypeVar
 
 from ..constants import (
     AUTHENTICATION_TIMEOUT_MESSAGE,
@@ -12,40 +10,19 @@ from ..constants import (
     MESSAGE_EVENT,
     ERROR_EVENT,
     AUTHENTICATED_EVENT,
+    MISSING_CREDENTIALS_MESSAGE,
     UNAUTHENTICATED_EVENT,
     UNAUTHENTICATED_MESSAGE
 )
 
-T = TypeVar('T')
-E = TypeVar('E')
+websocket.setdefaulttimeout(5)
 
 
-class Ok(Generic[T]):
-    def __init__(self, value: T):
-        self.value = value
-
-    def is_ok(self):
-        return True
-
-    def is_err(self):
-        return False
-
-    def __repr__(self):
-        return f"Ok({repr(self.value)})"
-
-
-class Err(Generic[E]):
-    def __init__(self, error: E):
-        self.error = error
-
-    def is_ok(self):
-        return False
-
-    def is_err(self):
-        return True
-
-    def __repr__(self):
-        return f"Err({repr(self.error)})"
+class AuthenticationState:
+    PENDING = 0
+    AUTHENTICATING = 1
+    AUTHENTICATED = 2
+    UNAUTHENTICATED = 3
 
 
 class WebSocketClient():
@@ -60,7 +37,9 @@ class WebSocketClient():
             on_error=self.__on_error,
             on_message=self.__on_message)
 
-        self.auth_result = None
+        self.auth_timer = None
+        self.auth_status = AuthenticationState.PENDING
+        self.error = None
 
     def ping(self, message):
         message = {
@@ -91,7 +70,6 @@ class WebSocketClient():
         }
         self.__send(message)
 
-
     def __authenticate(self):
         if self.config.get('api_key'):
             auth_info = {
@@ -108,9 +86,13 @@ class WebSocketClient():
                 }
             }
         else:
-            None  # error
+            self.auth_status = AuthenticationState.UNAUTHENTICATED
+            self.error = Exception(MISSING_CREDENTIALS_MESSAGE)
 
         self.__send(auth_info)
+        self.auth_status = AuthenticationState.AUTHENTICATING
+        self.auth_timer = Timer(5, self.check_auth_status)
+        self.auth_timer.start()
 
     def __send(self, message):
         self.__ws.send(json.dumps(message))
@@ -126,11 +108,12 @@ class WebSocketClient():
         self.ee.emit(MESSAGE_EVENT, data)
         if message['event'] == AUTHENTICATED_EVENT:
             self.ee.emit(AUTHENTICATED_EVENT, message)
-            self.auth_result = Ok("success")
+            self.auth_status = AuthenticationState.AUTHENTICATED
         elif message['event'] == ERROR_EVENT:
             if message['data'] and message['data']['message'] == UNAUTHENTICATED_MESSAGE:
                 self.ee.emit(UNAUTHENTICATED_EVENT, message)
-                self.auth_result = Err(UNAUTHENTICATED_MESSAGE)
+                self.auth_status = AuthenticationState.UNAUTHENTICATED
+                self.error = Exception(UNAUTHENTICATED_MESSAGE)
 
     def __on_error(self, ws, error):
         self.ee.emit(ERROR_EVENT, error)
@@ -141,23 +124,25 @@ class WebSocketClient():
     def off(self, event, listener):
         self.ee.off(event, listener)
 
+    def check_auth_status(self):
+        if self.auth_status == AuthenticationState.AUTHENTICATING:
+            self.auth_status = AuthenticationState.UNAUTHENTICATED
+            self.error = Exception(AUTHENTICATION_TIMEOUT_MESSAGE)
+
     def connect(self):
         Thread(target=self.__ws.run_forever).start()
-        auth_timer = 0
         while True:
-            if auth_timer > 5000:
-                self.auth_result = Err(AUTHENTICATION_TIMEOUT_MESSAGE)
-            auth_timer += 50
-            time.sleep(50/1000)
-            if self.auth_result is not None:
+            if self.auth_status in [AuthenticationState.AUTHENTICATED, AuthenticationState.UNAUTHENTICATED]:
                 break
-
-        if self.auth_result.is_ok():
-            return ""
-        elif self.auth_result.is_err():
-            raise Exception(self.auth_result.error)
+        if self.error is not None:
+            self.__ws.close()
+            self.auth_timer.cancel()
+            raise self.error
 
     def disconnect(self):
         if self.__ws is not None:
             self.__ws.close()
-            self.auth_result = None
+            self.auth_timer.cancel()
+            self.auth_timer = None
+            self.auth_status = AuthenticationState.PENDING
+            self.error = None
