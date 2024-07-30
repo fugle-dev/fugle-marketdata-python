@@ -1,5 +1,12 @@
 # Changelog
 
+# [2.2.0](https://github.com/fugle-dev/fugle-marketdata-python/compare/2.1.1...2.2.0) (2024-07-30)
+
+
+### Features
+
+* add REST methods for fetching intraday and historical data for futures and options ([1405f90](https://github.com/fugle-dev/fugle-marketdata-python/commit/1405f909226212e95c3b43df05151aaf81564559))
+
 ## [2.1.1](https://github.com/fugle-dev/fugle-marketdata-python/compare/2.1.0...2.1.1) (2024-03-11)
 
 # [2.1.0](https://github.com/fugle-dev/fugle-marketdata-python/compare/2.0.0...2.1.0) (2024-03-04)
