@@ -323,7 +323,7 @@ class TestFutOptRestIntradayClient:
             'https://api.fugle.tw/marketdata/v1.0/futopt/intraday/volumes/2330',
             headers={'X-API-KEY': 'api-key'}
         )
-    
+
 class TestFutOptRestHistoricalClient:
     def test_futopt_historical(self, api_key_client):
         futopt = api_key_client.futopt
@@ -363,5 +363,105 @@ class TestFutOptRestHistoricalClient:
         futopt.historical.daily(symbol='2330')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/futopt/historical/daily/2330',
+            headers={'Authorization': 'Bearer bearer-token'}
+        )
+
+
+class TestStockRestTechnicalClient:
+    def test_stock_technical(self, api_key_client):
+        stock = api_key_client.stock
+        assert hasattr(stock.technical, 'sma')
+        assert hasattr(stock.technical, 'rsi')
+        assert hasattr(stock.technical, 'kdj')
+        assert hasattr(stock.technical, 'macd')
+        assert hasattr(stock.technical, 'bb')
+
+    def test_technical_sma_api_key(self, mocker, api_key_client):
+        stock = api_key_client.stock
+        mock_get = mocker.patch('requests.get')
+        stock.technical.sma(symbol='2330')
+        mock_get.assert_called_once_with(
+            'https://api.fugle.tw/marketdata/v1.0/stock/technical/sma/2330',
+            headers={'X-API-KEY': 'api-key'}
+        )
+
+    def test_technical_sma_bearer_token(self, mocker, bearer_client):
+        stock = bearer_client.stock
+        mock_get = mocker.patch('requests.get')
+        stock.technical.sma(symbol='2330')
+        mock_get.assert_called_once_with(
+            'https://api.fugle.tw/marketdata/v1.0/stock/technical/sma/2330',
+            headers={'Authorization': 'Bearer bearer-token'}
+        )
+
+    def test_technical_rsi_api_key(self, mocker, api_key_client):
+        stock = api_key_client.stock
+        mock_get = mocker.patch('requests.get')
+        stock.technical.rsi(symbol='2330')
+        mock_get.assert_called_once_with(
+            'https://api.fugle.tw/marketdata/v1.0/stock/technical/rsi/2330',
+            headers={'X-API-KEY': 'api-key'}
+        )
+
+    def test_technical_rsi_bearer_token(self, mocker, bearer_client):
+        stock = bearer_client.stock
+        mock_get = mocker.patch('requests.get')
+        stock.technical.rsi(symbol='2330')
+        mock_get.assert_called_once_with(
+            'https://api.fugle.tw/marketdata/v1.0/stock/technical/rsi/2330',
+            headers={'Authorization': 'Bearer bearer-token'}
+        )
+
+    def test_technical_kdj_api_key(self, mocker, api_key_client):
+        stock = api_key_client.stock
+        mock_get = mocker.patch('requests.get')
+        stock.technical.kdj(symbol='2330')
+        mock_get.assert_called_once_with(
+            'https://api.fugle.tw/marketdata/v1.0/stock/technical/kdj/2330',
+            headers={'X-API-KEY': 'api-key'}
+        )
+
+    def test_technical_kdj_bearer_token(self, mocker, bearer_client):
+        stock = bearer_client.stock
+        mock_get = mocker.patch('requests.get')
+        stock.technical.kdj(symbol='2330')
+        mock_get.assert_called_once_with(
+            'https://api.fugle.tw/marketdata/v1.0/stock/technical/kdj/2330',
+            headers={'Authorization': 'Bearer bearer-token'}
+        )
+
+    def test_technical_macd_api_key(self, mocker, api_key_client):
+        stock = api_key_client.stock
+        mock_get = mocker.patch('requests.get')
+        stock.technical.macd(symbol='2330')
+        mock_get.assert_called_once_with(
+            'https://api.fugle.tw/marketdata/v1.0/stock/technical/macd/2330',
+            headers={'X-API-KEY': 'api-key'}
+        )
+
+    def test_technical_macd_bearer_token(self, mocker, bearer_client):
+        stock = bearer_client.stock
+        mock_get = mocker.patch('requests.get')
+        stock.technical.macd(symbol='2330')
+        mock_get.assert_called_once_with(
+            'https://api.fugle.tw/marketdata/v1.0/stock/technical/macd/2330',
+            headers={'Authorization': 'Bearer bearer-token'}
+        )
+
+    def test_technical_bb_api_key(self, mocker, api_key_client):
+        stock = api_key_client.stock
+        mock_get = mocker.patch('requests.get')
+        stock.technical.bb(symbol='2330')
+        mock_get.assert_called_once_with(
+            'https://api.fugle.tw/marketdata/v1.0/stock/technical/bb/2330',
+            headers={'X-API-KEY': 'api-key'}
+        )
+
+    def test_technical_bb_bearer_token(self, mocker, bearer_client):
+        stock = bearer_client.stock
+        mock_get = mocker.patch('requests.get')
+        stock.technical.bb(symbol='2330')
+        mock_get.assert_called_once_with(
+            'https://api.fugle.tw/marketdata/v1.0/stock/technical/bb/2330',
             headers={'Authorization': 'Bearer bearer-token'}
         )
