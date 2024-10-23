@@ -1,5 +1,12 @@
 # Changelog
 
+# [2.3.0](https://github.com/fugle-dev/fugle-marketdata-python/compare/2.2.0...2.3.0) (2024-10-23)
+
+
+### Features
+
+* add REST endpoints for stock technical API ([e9a2f59](https://github.com/fugle-dev/fugle-marketdata-python/commit/e9a2f597d7fc63c19bee4b6247f508ef11744452))
+
 # [2.2.0](https://github.com/fugle-dev/fugle-marketdata-python/compare/2.1.1...2.2.0) (2024-07-30)
 
 
