@@ -1,6 +1,7 @@
 from .intraday import Intraday
 from .historical import Historical
 from .snapshot import Snapshot
+from .technical import Technical
 
 
 class RestStockClient:
@@ -19,3 +20,7 @@ class RestStockClient:
     @property
     def snapshot(self):
         return Snapshot(**self.config)
+    
+    @property
+    def technical(self):
+        return Technical(**self.config)
