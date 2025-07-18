@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.3.1](https://github.com/fugle-dev/fugle-marketdata-python/compare/2.3.0...2.3.1) (2025-07-18)
+
+
+### Bug Fixes
+
+* add error handling for API requests ([414bf89](https://github.com/fugle-dev/fugle-marketdata-python/commit/414bf89464abb34c3c96bb344f06abf1c85d7a28))
+
+
+### Features
+
+* add SDK token authentication and custom base URL support ([17508e7](https://github.com/fugle-dev/fugle-marketdata-python/commit/17508e74d7e90556e3a0ce719427f7081580b65c))
+
 # [2.3.0](https://github.com/fugle-dev/fugle-marketdata-python/compare/2.2.0...2.3.0) (2024-10-23)
 
 
