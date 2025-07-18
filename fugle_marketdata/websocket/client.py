@@ -85,6 +85,13 @@ class WebSocketClient():
                     'token': self.config['bearer_token']
                 }
             }
+        elif self.config.get('sdk_token'):
+            auth_info = {
+                'event': 'auth',
+                'data': {
+                    'sdkToken': self.config['sdk_token']
+                }
+            }
         else:
             self.auth_status = AuthenticationState.UNAUTHENTICATED
             self.error = Exception(MISSING_CREDENTIALS_MESSAGE)

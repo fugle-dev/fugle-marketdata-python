@@ -18,16 +18,21 @@ class WebSocketClientFactory(ClientFactory):
         return self.get_client('futopt')
 
     def get_client(self, type):
+        base_url = self.options.get('base_url')
+        if not base_url:
+            base_url = f"{FUGLE_MARKETDATA_API_WEBSOCKET_BASE_URL}/{FUGLE_MARKETDATA_API_VERSION}"
+        
+        url = f'{base_url.rstrip("/")}/{type}/streaming'
 
-        base_url = f"{FUGLE_MARKETDATA_API_WEBSOCKET_BASE_URL}/{FUGLE_MARKETDATA_API_VERSION}/{type}/streaming"
-                    
         if type in self.__clients:
             return self.__clients[type]
         
+        client_options = {**self.options, 'base_url': url}
+
         if type == 'stock': 
-            client = WebSocketStockClient(base_url=base_url, **self.options)
+            client = WebSocketStockClient(**client_options)
         elif type == 'futopt' :
-            client = WebSocketFutOptClient(base_url=base_url, **self.options)
+            client = WebSocketFutOptClient(**client_options)
         else: 
             None
 

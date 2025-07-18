@@ -19,17 +19,24 @@ class RestClientFactory(ClientFactory):
         return self.get_client('futopt')
 
     def get_client(self, type):
+        base_url = self.options.get('base_url')
+        if not base_url:
+            base_url = f"{FUGLE_MARKETDATA_API_REST_BASE_URL}/{FUGLE_MARKETDATA_API_VERSION}"
 
-        base_url = f"{FUGLE_MARKETDATA_API_REST_BASE_URL}/{FUGLE_MARKETDATA_API_VERSION}/{type}"
+        url = f'{base_url.rstrip("/")}/{type}'
 
         if type in self.__clients:
             return self.__clients[type]
 
+        # Create a copy of options and override base_url
+        client_options = {**self.options}
+        client_options['base_url'] = url
+
         if type == 'stock':
-            client = RestStockClient(base_url=base_url, **self.options)
+            client = RestStockClient(**client_options)
 
         elif type == 'futopt':
-            client = RestFutOptClient(base_url=base_url, **self.options)
+            client = RestFutOptClient(**client_options)
 
         else:
             None

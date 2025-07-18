@@ -12,6 +12,9 @@ class BaseRest(object):
             headers['X-API-KEY'] = self.config['api_key']
         if self.config.get('bearer_token'):
             headers['Authorization'] = f"Bearer {self.config['bearer_token']}"
+        if self.config.get('sdk_token'):
+            headers['X-SDK-TOKEN'] = self.config['sdk_token']
+
 
         endpoint = path if (path.startswith('/')) else '/' + path
 
