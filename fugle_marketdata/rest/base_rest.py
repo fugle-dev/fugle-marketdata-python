@@ -19,4 +19,10 @@ class BaseRest(object):
             query = ''
         else:
             query = '?' + urlencode(params)
-        return requests.get(baseUrl + endpoint + query, headers=headers).json()
+
+        response = requests.get(baseUrl + endpoint + query, headers=headers)
+
+        try:
+            return response.json()
+        except ValueError as e:
+            raise Exception("An unexpected data error occurred.\nPlease try again later. If the issue persists, please contact support at  (tech.support@fugle.tw)")
