@@ -1,5 +1,24 @@
 # Changelog
 
+# [2.4.0](https://github.com/fugle-dev/fugle-marketdata-python/compare/2.3.0...2.4.0) (2025-11-18)
+
+
+### Bug Fixes
+
+* add error handling for API requests ([414bf89](https://github.com/fugle-dev/fugle-marketdata-python/commit/414bf89464abb34c3c96bb344f06abf1c85d7a28))
+
+
+### Features
+
+* add SDK token authentication and custom base URL support ([17508e7](https://github.com/fugle-dev/fugle-marketdata-python/commit/17508e74d7e90556e3a0ce719427f7081580b65c))
+* add WebSocket health check with ping/pong ([c16f73d](https://github.com/fugle-dev/fugle-marketdata-python/commit/c16f73dadf55d0b152c2fdece2220e302ed685e4))
+* enhance API error handling with detailed debugging information ([c635dda](https://github.com/fugle-dev/fugle-marketdata-python/commit/c635ddad0ef5fa361c1642ec11c655b0ab9b9f8c))
+
+
+### Performance Improvements
+
+* migrate WebSocket JSON handling from json to orjson ([7604273](https://github.com/fugle-dev/fugle-marketdata-python/commit/76042732c6ea776435f3987498f123be6ccdb9c4))
+
 ## [2.3.1](https://github.com/fugle-dev/fugle-marketdata-python/compare/2.3.0...2.3.1) (2025-07-18)
 
 
