@@ -1,4 +1,4 @@
-import json
+import orjson
 import websocket
 from typing import Optional
 from pyee import EventEmitter
@@ -115,7 +115,7 @@ class WebSocketClient():
         self.auth_timer.start()
 
     def __send(self, message):
-        self.__ws.send(json.dumps(message))
+        self.__ws.send(orjson.dumps(message).decode('utf-8'))
 
     def __on_open(self, ws):
         self.ee.emit(CONNECT_EVENT)
@@ -124,7 +124,7 @@ class WebSocketClient():
         self.ee.emit(DISCONNECT_EVENT, close_status_code, close_msg)
 
     def __on_message(self, ws, data):
-        message = json.loads(data)
+        message = orjson.loads(data)
         self.ee.emit(MESSAGE_EVENT, data)
         if message['event'] == AUTHENTICATED_EVENT:
             self.ee.emit(AUTHENTICATED_EVENT, message)
