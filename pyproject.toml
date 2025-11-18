@@ -14,7 +14,8 @@ keywords = ["fugle", "realtime", "stock"]
 python = "^3.7"
 requests = "^2.28.2"
 websocket-client = "^1.5.1"
-pyee = [{ version = "^9.0.4", python = "<=3.11" }, { version = "^11.1.0", python = ">3.11" }] 
+pyee = [{ version = "^9.0.4", python = "<=3.11" }, { version = "^11.1.0", python = ">3.11" }]
+orjson = "^3.9.0" 
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2.0"
