@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.4.1](https://github.com/fugle-dev/fugle-marketdata-python/compare/2.4.0...2.4.1) (2026-01-12)
+
+
+### Features
+
+* add corporate actions REST API endpoints ([191c939](https://github.com/fugle-dev/fugle-marketdata-python/commit/191c939b214fde7c209f59617f1c40157be54139))
+
 # [2.4.0](https://github.com/fugle-dev/fugle-marketdata-python/compare/2.3.0...2.4.0) (2025-11-18)
 
 
