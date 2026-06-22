@@ -1,3 +1,4 @@
+import time
 import orjson
 import websocket
 from typing import Optional
@@ -52,7 +53,10 @@ class WebSocketClient():
 
         # Health check properties
         self.ping_timer = None
-        self.missed_pongs = 0
+        self.consecutive_misses = 0
+        self.last_message_at = 0.0
+        self.last_ping_at = 0.0
+        self.__disconnect_reason = None
 
     def ping(self, message):
         message = {
@@ -121,9 +125,16 @@ class WebSocketClient():
         self.ee.emit(CONNECT_EVENT)
 
     def __on_close(self, ws, close_status_code, close_msg):
-        self.ee.emit(DISCONNECT_EVENT, close_status_code, close_msg)
+        reason = self.__disconnect_reason
+        self.__disconnect_reason = None
+        if reason is not None:
+            self.ee.emit(DISCONNECT_EVENT, close_status_code, close_msg, reason)
+        else:
+            self.ee.emit(DISCONNECT_EVENT, close_status_code, close_msg)
 
     def __on_message(self, ws, data):
+        # Any inbound message counts as freshness.
+        self.last_message_at = time.monotonic()
         message = orjson.loads(data)
         self.ee.emit(MESSAGE_EVENT, data)
         if message['event'] == AUTHENTICATED_EVENT:
@@ -138,9 +149,6 @@ class WebSocketClient():
                 self.ee.emit(UNAUTHENTICATED_EVENT, message)
                 self.auth_status = AuthenticationState.UNAUTHENTICATED
                 self.error = Exception(UNAUTHENTICATED_MESSAGE)
-        elif message['event'] == 'pong':
-            # Reset missed pongs counter
-            self.missed_pongs = 0
 
     def __on_error(self, ws, error):
         self.ee.emit(ERROR_EVENT, error)
@@ -157,35 +165,47 @@ class WebSocketClient():
             self.error = Exception(AUTHENTICATION_TIMEOUT_MESSAGE)
 
     def __start_health_check(self):
-        """Start the health check ping/pong mechanism"""
+        """Start the freshness-based health check ping/pong mechanism"""
         if self.health_check and self.health_check.enabled:
-            self.missed_pongs = 0
-            self.__send_ping()
+            self.consecutive_misses = 0
+            # Seed timestamps so the first tick treats the connection as fresh.
+            now = time.monotonic()
+            self.last_message_at = now
+            self.last_ping_at = now
+            self.__schedule_next_ping()
 
-    def __send_ping(self):
-        """Send ping and schedule next ping"""
+    def __schedule_next_ping(self):
         if not self.health_check or not self.health_check.enabled:
+            return
+        interval_seconds = self.health_check.ping_interval / 1000.0
+        self.ping_timer = Timer(interval_seconds, self.__health_check_tick)
+        self.ping_timer.daemon = True
+        self.ping_timer.start()
+
+    def __health_check_tick(self):
+        """Run one freshness check, then send a ping and reschedule."""
+        if not self.health_check or not self.health_check.enabled:
+            return
+
+        # Freshness check: did anything arrive since our last ping?
+        if self.last_message_at < self.last_ping_at:
+            self.consecutive_misses += 1
+        else:
+            self.consecutive_misses = 0
+
+        if self.consecutive_misses >= self.health_check.max_missed_pongs:
+            self.__disconnect_reason = {"reason": "health-check-timeout"}
+            self.disconnect()
             return
 
         try:
             self.ping("")
-            self.missed_pongs += 1
-            self.__check_missed_pongs()
-
-            # Schedule next ping
-            interval_seconds = self.health_check.ping_interval / 1000.0
-            self.ping_timer = Timer(interval_seconds, self.__send_ping)
-            self.ping_timer.start()
+            self.last_ping_at = time.monotonic()
+            self.__schedule_next_ping()
         except Exception as error:
             print(f"Failed to send ping: {error}")
+            self.__disconnect_reason = {"reason": "health-check-timeout"}
             self.disconnect()
-
-    def __check_missed_pongs(self):
-        """Check if too many pongs have been missed"""
-        if self.health_check and self.health_check.enabled:
-            if self.missed_pongs > self.health_check.max_missed_pongs:
-                self.disconnect()
-                raise Exception(f"Did not receive pong for {self.health_check.max_missed_pongs} consecutive times. Disconnecting...")
 
     def connect(self):
         Thread(target=self.__ws.run_forever).start()

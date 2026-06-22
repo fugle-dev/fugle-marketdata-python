@@ -1,5 +1,7 @@
 import threading
+import time
 from fugle_marketdata import WebSocketClient
+from fugle_marketdata.websocket.client import HealthCheckConfig, WebSocketClient as CoreWebSocketClient
 from fugle_marketdata.websocket.futopt.client import WebSocketFutOptClient
 from fugle_marketdata.websocket.stock.client import WebSocketStockClient
 import pytest
@@ -180,3 +182,146 @@ class TestWebSocketClientUrlNormalization:
         assert stock.config['base_url'] == 'wss://ws.example.com/api/v2/stock/streaming'
         futopt = client.futopt
         assert futopt.config['base_url'] == 'wss://ws.example.com/api/v2/futopt/streaming'
+
+
+def _build_health_client(max_missed_pongs=2, ping_interval=30000):
+    """Build a core client with health check enabled, with the send and the
+    disconnect side effects stubbed so the freshness logic can be unit-tested
+    without a live socket."""
+    health = HealthCheckConfig(
+        enabled=True,
+        ping_interval=ping_interval,
+        max_missed_pongs=max_missed_pongs,
+    )
+    client = CoreWebSocketClient(
+        base_url='wss://ws.example.com/stock/streaming',
+        api_key='api-key',
+        health_check=health,
+    )
+
+    sent = []
+    # Stub the name-mangled private __send so ping() does not touch the socket.
+    client._WebSocketClient__send = lambda message: sent.append(message)
+    client._sent = sent
+
+    closed = {'count': 0}
+
+    def fake_disconnect():
+        closed['count'] += 1
+        if client.ping_timer is not None:
+            client.ping_timer.cancel()
+            client.ping_timer = None
+        # Mimic real on_close emitting the disconnect event with the reason.
+        reason = client._WebSocketClient__disconnect_reason
+        client._WebSocketClient__disconnect_reason = None
+        if reason is not None:
+            client.ee.emit('disconnect', None, None, reason)
+        else:
+            client.ee.emit('disconnect', None, None)
+
+    client.disconnect = fake_disconnect
+    client._closed = closed
+    return client
+
+
+def _tick(client):
+    """Run a single health-check tick synchronously."""
+    client._WebSocketClient__health_check_tick()
+
+
+class TestWebSocketHealthCheck:
+    def test_config_defaults(self):
+        cfg = HealthCheckConfig()
+        assert cfg.enabled is False
+        assert cfg.ping_interval == 30000
+        assert cfg.max_missed_pongs == 2
+
+    def test_tick_sends_ping_and_updates_last_ping_at(self):
+        client = _build_health_client()
+        client.last_message_at = time.monotonic()
+        client.last_ping_at = client.last_message_at
+        before = client.last_ping_at
+        _tick(client)
+        # A ping is sent and last_ping_at advances.
+        assert any(m['event'] == 'ping' for m in client._sent)
+        assert client.last_ping_at >= before
+        assert client._closed['count'] == 0
+        if client.ping_timer:
+            client.ping_timer.cancel()
+
+    def test_inbound_message_resets_freshness_no_disconnect(self):
+        client = _build_health_client(max_missed_pongs=2)
+        client.last_message_at = time.monotonic()
+        client.last_ping_at = client.last_message_at
+
+        for _ in range(5):
+            _tick(client)
+            if client.ping_timer:
+                client.ping_timer.cancel()
+                client.ping_timer = None
+            # Simulate any inbound message arriving after the ping.
+            client._WebSocketClient__on_message(
+                None, b'{"event":"data","data":{}}'
+            )
+
+        assert client.consecutive_misses == 0
+        assert client._closed['count'] == 0
+
+    def test_consecutive_misses_accumulate_then_disconnect(self):
+        client = _build_health_client(max_missed_pongs=2)
+        client.last_message_at = time.monotonic()
+        client.last_ping_at = client.last_message_at
+
+        # First tick: fresh (seeded equal), sends ping, advances last_ping_at.
+        _tick(client)
+        if client.ping_timer:
+            client.ping_timer.cancel()
+            client.ping_timer = None
+        assert client.consecutive_misses == 0
+
+        # No inbound message arrives -> miss 1
+        _tick(client)
+        if client.ping_timer:
+            client.ping_timer.cancel()
+            client.ping_timer = None
+        assert client.consecutive_misses == 1
+        assert client._closed['count'] == 0
+
+        # Still nothing -> miss 2 reaches max -> disconnect
+        _tick(client)
+        assert client._closed['count'] == 1
+
+    def test_disconnect_event_has_timeout_reason_on_miss(self):
+        client = _build_health_client(max_missed_pongs=1)
+        received = {}
+
+        def on_disconnect(*args):
+            received['args'] = args
+
+        client.on('disconnect', on_disconnect)
+
+        # Seed so the connection is already stale relative to a future ping.
+        client.last_ping_at = time.monotonic()
+        client.last_message_at = client.last_ping_at - 1.0
+
+        _tick(client)
+        assert client._closed['count'] == 1
+        # disconnect emitted with (code, msg, reason)
+        assert received['args'][-1] == {"reason": "health-check-timeout"}
+
+    def test_normal_disconnect_has_no_reason(self):
+        # Use a real (un-stubbed) core client to check on_close threading.
+        health = HealthCheckConfig(enabled=True)
+        client = CoreWebSocketClient(
+            base_url='wss://ws.example.com/stock/streaming',
+            api_key='api-key',
+            health_check=health,
+        )
+        received = {}
+        client.on('disconnect', lambda *args: received.update(args=args))
+
+        # No pending reason -> normal close, second-style arg absent.
+        client._WebSocketClient__on_close(None, 1000, 'normal')
+        assert received['args'] == (1000, 'normal')
+        # Only two args: no reason payload.
+        assert len(received['args']) == 2
