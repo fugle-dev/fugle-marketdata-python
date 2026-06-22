@@ -218,6 +218,42 @@ class TestStockRestHistoricalClient:
             headers={'Authorization': 'Bearer bearer-token'}
         )
 
+class TestStockRestOwnershipClient:
+    def test_stock_ownership(self, api_key_client):
+        stock = api_key_client.stock
+        assert hasattr(stock.ownership, 'etf_holdings')
+
+    def test_ownership_etf_holdings_api_key(self, mocker, api_key_client):
+        stock = api_key_client.stock
+        mock_get = mocker.patch('requests.get')
+        mock_get.return_value.status_code = 200
+        stock.ownership.etf_holdings(symbol='0050')
+        mock_get.assert_called_once_with(
+            'https://api.fugle.tw/marketdata/v1.0/stock/ownership/etf-holdings/0050',
+            headers={'X-API-KEY': 'api-key'}
+        )
+
+    def test_ownership_etf_holdings_bearer_token(self, bearer_client, mocker):
+        stock = bearer_client.stock
+        mock_get = mocker.patch('requests.get')
+        mock_get.return_value.status_code = 200
+        stock.ownership.etf_holdings(symbol='0050')
+        mock_get.assert_called_once_with(
+            'https://api.fugle.tw/marketdata/v1.0/stock/ownership/etf-holdings/0050',
+            headers={'Authorization': 'Bearer bearer-token'}
+        )
+
+    def test_ownership_etf_holdings_query_params(self, mocker, api_key_client):
+        stock = api_key_client.stock
+        mock_get = mocker.patch('requests.get')
+        mock_get.return_value.status_code = 200
+        stock.ownership.etf_holdings(symbol='0050', from_='2026-05-01', to='2026-05-21', sort='desc', code='2330')
+        mock_get.assert_called_once_with(
+            'https://api.fugle.tw/marketdata/v1.0/stock/ownership/etf-holdings/0050?from=2026-05-01&to=2026-05-21&sort=desc&code=2330',
+            headers={'X-API-KEY': 'api-key'}
+        )
+
+
 class TestStockRestSnapshotClient:
     def test_stock_historical(self, api_key_client):
         stock = api_key_client.stock
