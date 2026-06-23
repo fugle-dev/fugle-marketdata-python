@@ -28,8 +28,8 @@ stock = client.stock  # Stock REST API client
 print(stock.intraday.quote(symbol="2330"))
 
 # Get the daily component holdings of an ETF.
-# Note: `from` is a reserved Python keyword, so pass it as `from_`.
-print(stock.ownership.etf_holdings(symbol="0050", from_="2026-05-01", to="2026-05-21", sort="desc"))
+# Note: `from` is a reserved Python keyword, so pass it via dict unpacking.
+print(stock.ownership.etf_holdings(symbol="0050", **{"from": "2026-05-01"}, to="2026-05-21", sort="desc"))
 ```
 
 ### WebSocket API
