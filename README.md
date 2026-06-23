@@ -26,7 +26,6 @@ The library is an isomorphic Python client that supports REST API and WebSocket.
 client = RestClient(api_key = 'YOUR_API_KEY')
 stock = client.stock  # Stock REST API client
 print(stock.intraday.quote(symbol="2330"))
-print(stock.ownership.etf_holdings(symbol="0050", **{"from": "2026-05-01"}, to="2026-05-21", sort="desc"))
 ```
 
 ### WebSocket API
