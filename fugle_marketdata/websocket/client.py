@@ -193,7 +193,10 @@ class WebSocketClient():
         else:
             self.consecutive_misses = 0
 
-        if self.consecutive_misses >= self.health_check.max_missed_pongs:
+        # Clamp to >= 1: max_missed_pongs of 0 would disconnect a healthy
+        # connection on the first tick (consecutive_misses starts at 0).
+        max_missed = max(1, self.health_check.max_missed_pongs)
+        if self.consecutive_misses >= max_missed:
             self.__disconnect_reason = {"reason": "health-check-timeout"}
             self.disconnect()
             return

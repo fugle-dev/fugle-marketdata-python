@@ -309,6 +309,20 @@ class TestWebSocketHealthCheck:
         # disconnect emitted with (code, msg, reason)
         assert received['args'][-1] == {"reason": "health-check-timeout"}
 
+    def test_max_missed_pongs_zero_is_clamped_to_one(self):
+        # max_missed_pongs=0 must not disconnect a healthy connection on the
+        # first tick; it is clamped to a minimum of 1.
+        client = _build_health_client(max_missed_pongs=0)
+        client.last_message_at = time.monotonic()
+        client.last_ping_at = client.last_message_at
+
+        _tick(client)
+        if client.ping_timer:
+            client.ping_timer.cancel()
+            client.ping_timer = None
+
+        assert client._closed['count'] == 0
+
     def test_normal_disconnect_has_no_reason(self):
         # Use a real (un-stubbed) core client to check on_close threading.
         health = HealthCheckConfig(enabled=True)
