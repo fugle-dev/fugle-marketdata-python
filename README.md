@@ -92,6 +92,60 @@ if __name__ == "__main__":
 
 ```
 
+### Health Check
+
+The WebSocket client can monitor connection liveness using an app-level
+JSON ping/pong (`{ "event": "ping" }` / `{ "event": "pong" }`). It is disabled
+by default. When enabled, on each interval tick the client checks whether
+**any** inbound message has arrived since the last ping it sent (freshness
+check):
+
+- If nothing arrived since the last ping, that counts as a *miss* and the
+  consecutive-miss counter is incremented.
+- If any inbound message (a `pong`, market data, or anything else) arrived,
+  the counter is reset to `0`.
+- Once the consecutive-miss counter reaches `max_missed_pongs`, the client
+  disconnects and stops the timer.
+
+| Option             | Type   | Default | Description                                                    |
+| ------------------ | ------ | ------- | -------------------------------------------------------------- |
+| `enabled`          | `bool` | `False` | Enables the health-check ping/pong.                            |
+| `ping_interval`    | `int`  | `30000` | Interval in milliseconds between health-check pings.           |
+| `max_missed_pongs` | `int`  | `2`     | Consecutive misses (no inbound messages) before disconnecting. |
+
+```py
+from fugle_marketdata import WebSocketClient
+from fugle_marketdata.websocket.client import HealthCheckConfig
+
+client = WebSocketClient(
+    api_key='YOUR_API_KEY',
+    health_check=HealthCheckConfig(
+        enabled=True,
+        ping_interval=30000,
+        max_missed_pongs=2,
+    ),
+)
+```
+
+#### Disconnect reason
+
+When the client disconnects because of a health-check timeout, the
+`disconnect` event is emitted with an extra argument
+`{"reason": "health-check-timeout"}`. Normal or manual disconnects emit
+`disconnect` **without** that extra argument. Listeners that only read the
+close code and message keep working unchanged.
+
+```py
+def handle_disconnect(code, message, info=None):
+    if info and info.get("reason") == "health-check-timeout":
+        print("Health check timed out, reconnecting...")
+        stock.connect()
+        stock.subscribe({"channel": "trades", "symbol": "2330"})
+
+
+stock.on("disconnect", handle_disconnect)
+```
+
 ## Error Handling
 
 The library provides a custom `FugleAPIError` exception for API-related errors, which includes detailed debugging information.
