@@ -26,30 +26,7 @@ The library is an isomorphic Python client that supports REST API and WebSocket.
 client = RestClient(api_key = 'YOUR_API_KEY')
 stock = client.stock  # Stock REST API client
 print(stock.intraday.quote(symbol="2330"))
-
-futopt = client.futopt  # Futures & Options REST API client
 ```
-
-#### Futures & Options spread contracts
-
-Spread (combination) contract symbols contain a `/` separator (e.g. `MXFA6/C6`).
-The symbol is URL-encoded automatically, so you can pass it as-is. Their quotes
-may carry **negative** prices, and the quote response includes trial-matching
-(試搓) fields `lastTrial` / `isTrial`.
-
-```py
-# List tradable spread contracts (pass the string "true", not a Python bool)
-print(futopt.intraday.tickers(type="FUTURE", isSpread="true"))
-
-# Quote a spread contract
-print(futopt.intraday.quote(symbol="MXFA6/C6"))
-
-# Fetch trial-matching (試搓) trade ticks
-print(futopt.intraday.trades(symbol="TXFA6", isTrial=True))
-```
-
-The futopt WebSocket `books` channel may also include an extended 6th order-book
-level (`derivedBid` / `derivedAsk`) and an `isTrial` flag during the trial session.
 
 ### WebSocket API
 
@@ -90,60 +67,6 @@ def main():
 if __name__ == "__main__":
     main()
 
-```
-
-### Health Check
-
-The WebSocket client can monitor connection liveness using an app-level
-JSON ping/pong (`{ "event": "ping" }` / `{ "event": "pong" }`). It is disabled
-by default. When enabled, on each interval tick the client checks whether
-**any** inbound message has arrived since the last ping it sent (freshness
-check):
-
-- If nothing arrived since the last ping, that counts as a *miss* and the
-  consecutive-miss counter is incremented.
-- If any inbound message (a `pong`, market data, or anything else) arrived,
-  the counter is reset to `0`.
-- Once the consecutive-miss counter reaches `max_missed_pongs`, the client
-  disconnects and stops the timer.
-
-| Option             | Type   | Default | Description                                                    |
-| ------------------ | ------ | ------- | -------------------------------------------------------------- |
-| `enabled`          | `bool` | `False` | Enables the health-check ping/pong.                            |
-| `ping_interval`    | `int`  | `30000` | Interval in milliseconds between health-check pings.           |
-| `max_missed_pongs` | `int`  | `2`     | Consecutive misses (no inbound messages) before disconnecting. |
-
-```py
-from fugle_marketdata import WebSocketClient
-from fugle_marketdata.websocket.client import HealthCheckConfig
-
-client = WebSocketClient(
-    api_key='YOUR_API_KEY',
-    health_check=HealthCheckConfig(
-        enabled=True,
-        ping_interval=30000,
-        max_missed_pongs=2,
-    ),
-)
-```
-
-#### Disconnect reason
-
-When the client disconnects because of a health-check timeout, the
-`disconnect` event is emitted with an extra argument
-`{"reason": "health-check-timeout"}`. Normal or manual disconnects emit
-`disconnect` **without** that extra argument. Listeners that only read the
-close code and message keep working unchanged.
-
-```py
-def handle_disconnect(code, message, info=None):
-    if info and info.get("reason") == "health-check-timeout":
-        print("Health check timed out, reconnecting...")
-        stock.connect()
-        stock.subscribe({"channel": "trades", "symbol": "2330"})
-
-
-stock.on("disconnect", handle_disconnect)
 ```
 
 ## Error Handling
