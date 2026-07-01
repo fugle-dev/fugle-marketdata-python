@@ -17,6 +17,14 @@ def bearer_client():
 def custom_base_url_client():
     return RestClient(api_key='test-key', base_url='https://custom-api.example.com/v2.0')
 
+def _configure_get(mock_get):
+    """Give a patched ``requests.get`` a successful, JSON-parsable response so
+    BaseRest.request()'s ``response.status_code >= 400`` check doesn't choke on
+    a bare MagicMock. Returns the same mock for call-argument assertions."""
+    mock_get.return_value.status_code = 200
+    mock_get.return_value.json.return_value = {}
+    return mock_get
+
 class TestRestClientConstructor(object):
     def test_with_apiKey(self):
         # 建立 RestClient 實例並測試是否為 RestClient 物件
@@ -78,7 +86,7 @@ class TestStockRestIntradayClient:
 
     def test_intraday_tickers_api_key(self, mocker, api_key_client):
         stock = api_key_client.stock
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         stock.intraday.tickers(type='INDEX')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/stock/intraday/tickers?type=INDEX',
@@ -87,7 +95,7 @@ class TestStockRestIntradayClient:
 
     def test_intraday_tickers_bearer_token(self, bearer_client, mocker):
         stock = bearer_client.stock
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         stock.intraday.tickers(type='INDEX')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/stock/intraday/tickers?type=INDEX',
@@ -96,7 +104,7 @@ class TestStockRestIntradayClient:
 
     def test_intraday_ticker_api_key(self, mocker, api_key_client):
         stock = api_key_client.stock
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         stock.intraday.ticker(symbol='2330')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/stock/intraday/ticker/2330',
@@ -105,7 +113,7 @@ class TestStockRestIntradayClient:
 
     def test_intraday_ticker_bearer_token(self, bearer_client, mocker):
         stock = bearer_client.stock
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         stock.intraday.ticker(symbol='2330')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/stock/intraday/ticker/2330',
@@ -115,7 +123,7 @@ class TestStockRestIntradayClient:
 
     def test_intraday_quote_api_key(self, mocker, api_key_client):
         stock = api_key_client.stock
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         stock.intraday.quote(symbol='2330')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/stock/intraday/quote/2330',
@@ -124,7 +132,7 @@ class TestStockRestIntradayClient:
 
     def test_intraday_quote_bearer_token(self, bearer_client, mocker):
         stock = bearer_client.stock
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         stock.intraday.quote(symbol='2330')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/stock/intraday/quote/2330',
@@ -133,7 +141,7 @@ class TestStockRestIntradayClient:
 
     def test_intraday_trades_api_key(self, mocker, api_key_client):
         stock = api_key_client.stock
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         stock.intraday.trades(symbol='2330')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/stock/intraday/trades/2330',
@@ -142,7 +150,7 @@ class TestStockRestIntradayClient:
 
     def test_intraday_trades_bearer_token(self, bearer_client, mocker):
         stock = bearer_client.stock
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         stock.intraday.trades(symbol='2330')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/stock/intraday/trades/2330',
@@ -151,7 +159,7 @@ class TestStockRestIntradayClient:
 
     def test_intraday_volumes_api_key(self, mocker, api_key_client):
         stock = api_key_client.stock
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         stock.intraday.volumes(symbol='2330')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/stock/intraday/volumes/2330',
@@ -160,7 +168,7 @@ class TestStockRestIntradayClient:
 
     def test_intraday_volumes_bearer_token(self, bearer_client, mocker):
         stock = bearer_client.stock
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         stock.intraday.volumes(symbol='2330')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/stock/intraday/volumes/2330',
@@ -169,7 +177,7 @@ class TestStockRestIntradayClient:
 
     def test_intraday_quote_custom_base_url(self, mocker, custom_base_url_client):
         stock = custom_base_url_client.stock
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         stock.intraday.quote(symbol='2330')
         mock_get.assert_called_once_with(
             'https://custom-api.example.com/v2.0/stock/intraday/quote/2330',
@@ -184,7 +192,7 @@ class TestStockRestHistoricalClient:
 
     def test_historical_candles_api_key(self, mocker, api_key_client):
         stock = api_key_client.stock
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         stock.historical.candles(symbol='2330')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/stock/historical/candles/2330',
@@ -193,7 +201,7 @@ class TestStockRestHistoricalClient:
 
     def test_historical_candles_bearer_token(self, bearer_client, mocker):
         stock = bearer_client.stock
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         stock.historical.candles(symbol='2330')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/stock/historical/candles/2330',
@@ -202,7 +210,7 @@ class TestStockRestHistoricalClient:
 
     def test_historical_stats_api_key(self, mocker, api_key_client):
         stock = api_key_client.stock
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         stock.historical.stats(symbol='2330')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/stock/historical/stats/2330',
@@ -211,7 +219,7 @@ class TestStockRestHistoricalClient:
 
     def test_historical_stats_bearer_token(self, bearer_client, mocker):
         stock = bearer_client.stock
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         stock.historical.stats(symbol='2330')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/stock/historical/stats/2330',
@@ -227,7 +235,7 @@ class TestStockRestSnapshotClient:
 
     def test_snapshot_quotes_api_key(self, mocker, api_key_client):
         stock = api_key_client.stock
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         stock.snapshot.quotes(market='TSE')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/stock/snapshot/quotes/TSE',
@@ -236,7 +244,7 @@ class TestStockRestSnapshotClient:
 
     def test_snapshot_quotes_bearer_token(self, bearer_client, mocker):
         stock = bearer_client.stock
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         stock.snapshot.quotes(market='TSE')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/stock/snapshot/quotes/TSE',
@@ -245,7 +253,7 @@ class TestStockRestSnapshotClient:
 
     def test_snapshot_movers_api_key(self, mocker, api_key_client):
         stock = api_key_client.stock
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         stock.snapshot.movers(market='TSE', change='percent', direction='up')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/stock/snapshot/movers/TSE?change=percent&direction=up',
@@ -254,7 +262,7 @@ class TestStockRestSnapshotClient:
 
     def test_snapshot_movers_bearer_token(self, bearer_client, mocker):
         stock = bearer_client.stock
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         stock.snapshot.movers(market='TSE', change='percent', direction='up')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/stock/snapshot/movers/TSE?change=percent&direction=up',
@@ -263,7 +271,7 @@ class TestStockRestSnapshotClient:
 
     def test_snapshot_actives_api_key(self, mocker, api_key_client):
         stock = api_key_client.stock
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         stock.snapshot.actives(market='TSE', trade='volume')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/stock/snapshot/actives/TSE?trade=volume',
@@ -272,7 +280,7 @@ class TestStockRestSnapshotClient:
 
     def test_snapshot_actives_bearer_token(self, bearer_client, mocker):
         stock = bearer_client.stock
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         stock.snapshot.actives(market='TSE', trade='volume')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/stock/snapshot/actives/TSE?trade=volume',
@@ -292,7 +300,7 @@ class TestFutOptRestIntradayClient:
 
     def test_intraday_products_api_key(self, mocker, api_key_client):
         futopt = api_key_client.futopt
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         futopt.intraday.products(type='OPTION')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/futopt/intraday/products?type=OPTION',
@@ -301,16 +309,27 @@ class TestFutOptRestIntradayClient:
 
     def test_intraday_tickers_api_key(self, mocker, api_key_client):
         futopt = api_key_client.futopt
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         futopt.intraday.tickers(type='OPTION')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/futopt/intraday/tickers?type=OPTION',
             headers={'X-API-KEY': 'api-key'}
         )
-    
+
+    def test_intraday_tickers_is_spread(self, mocker, api_key_client):
+        futopt = api_key_client.futopt
+        mock_get = _configure_get(mocker.patch('requests.get'))
+        # NOTE: pass the string 'true'/'false' (not a Python bool) so the
+        # backend boolean transform recognises the value.
+        futopt.intraday.tickers(type='FUTURE', isSpread='true')
+        mock_get.assert_called_once_with(
+            'https://api.fugle.tw/marketdata/v1.0/futopt/intraday/tickers?type=FUTURE&isSpread=true',
+            headers={'X-API-KEY': 'api-key'}
+        )
+
     def test_intraday_ticker_api_key(self, mocker, api_key_client):
         futopt = api_key_client.futopt
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         futopt.intraday.ticker(symbol='2330')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/futopt/intraday/ticker/2330',
@@ -319,16 +338,25 @@ class TestFutOptRestIntradayClient:
 
     def test_intraday_quote_api_key(self, mocker, api_key_client):
         futopt = api_key_client.futopt
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         futopt.intraday.quote(symbol='2330')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/futopt/intraday/quote/2330',
             headers={'X-API-KEY': 'api-key'}
         )
 
+    def test_intraday_quote_spread_symbol(self, mocker, api_key_client):
+        futopt = api_key_client.futopt
+        mock_get = _configure_get(mocker.patch('requests.get'))
+        futopt.intraday.quote(symbol='MXFA6/C6')
+        mock_get.assert_called_once_with(
+            'https://api.fugle.tw/marketdata/v1.0/futopt/intraday/quote/MXFA6%2FC6',
+            headers={'X-API-KEY': 'api-key'}
+        )
+
     def test_intraday_candles_api_key(self, mocker, api_key_client):
         futopt = api_key_client.futopt
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         futopt.intraday.candles(symbol='2330')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/futopt/intraday/candles/2330',
@@ -337,16 +365,25 @@ class TestFutOptRestIntradayClient:
 
     def test_intraday_trades_api_key(self, mocker, api_key_client):
         futopt = api_key_client.futopt
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         futopt.intraday.trades(symbol='2330')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/futopt/intraday/trades/2330',
             headers={'X-API-KEY': 'api-key'}
         )
 
+    def test_intraday_trades_is_trial(self, mocker, api_key_client):
+        futopt = api_key_client.futopt
+        mock_get = _configure_get(mocker.patch('requests.get'))
+        futopt.intraday.trades(symbol='TXFA6', isTrial='true')
+        mock_get.assert_called_once_with(
+            'https://api.fugle.tw/marketdata/v1.0/futopt/intraday/trades/TXFA6?isTrial=true',
+            headers={'X-API-KEY': 'api-key'}
+        )
+
     def test_intraday_volumes_api_key(self, mocker, api_key_client):
         futopt = api_key_client.futopt
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         futopt.intraday.volumes(symbol='2330')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/futopt/intraday/volumes/2330',
@@ -361,7 +398,7 @@ class TestFutOptRestHistoricalClient:
 
     def test_historical_candles_api_key(self, mocker, api_key_client):
         futopt = api_key_client.futopt
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         futopt.historical.candles(symbol='2330')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/futopt/historical/candles/2330',
@@ -370,7 +407,7 @@ class TestFutOptRestHistoricalClient:
 
     def test_historical_candles_bearer_token(self, bearer_client, mocker):
         futopt = bearer_client.futopt
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         futopt.historical.candles(symbol='2330')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/futopt/historical/candles/2330',
@@ -379,7 +416,7 @@ class TestFutOptRestHistoricalClient:
 
     def test_historical_daily_api_key(self, mocker, api_key_client):
         futopt = api_key_client.futopt
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         futopt.historical.daily(symbol='2330')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/futopt/historical/daily/2330',
@@ -388,7 +425,7 @@ class TestFutOptRestHistoricalClient:
 
     def test_historical_daily_bearer_token(self, bearer_client, mocker):
         futopt = bearer_client.futopt
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         futopt.historical.daily(symbol='2330')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/futopt/historical/daily/2330',
@@ -407,7 +444,7 @@ class TestStockRestTechnicalClient:
 
     def test_technical_sma_api_key(self, mocker, api_key_client):
         stock = api_key_client.stock
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         stock.technical.sma(symbol='2330')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/stock/technical/sma/2330',
@@ -416,7 +453,7 @@ class TestStockRestTechnicalClient:
 
     def test_technical_sma_bearer_token(self, mocker, bearer_client):
         stock = bearer_client.stock
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         stock.technical.sma(symbol='2330')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/stock/technical/sma/2330',
@@ -425,7 +462,7 @@ class TestStockRestTechnicalClient:
 
     def test_technical_rsi_api_key(self, mocker, api_key_client):
         stock = api_key_client.stock
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         stock.technical.rsi(symbol='2330')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/stock/technical/rsi/2330',
@@ -434,7 +471,7 @@ class TestStockRestTechnicalClient:
 
     def test_technical_rsi_bearer_token(self, mocker, bearer_client):
         stock = bearer_client.stock
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         stock.technical.rsi(symbol='2330')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/stock/technical/rsi/2330',
@@ -443,7 +480,7 @@ class TestStockRestTechnicalClient:
 
     def test_technical_kdj_api_key(self, mocker, api_key_client):
         stock = api_key_client.stock
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         stock.technical.kdj(symbol='2330')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/stock/technical/kdj/2330',
@@ -452,7 +489,7 @@ class TestStockRestTechnicalClient:
 
     def test_technical_kdj_bearer_token(self, mocker, bearer_client):
         stock = bearer_client.stock
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         stock.technical.kdj(symbol='2330')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/stock/technical/kdj/2330',
@@ -461,7 +498,7 @@ class TestStockRestTechnicalClient:
 
     def test_technical_macd_api_key(self, mocker, api_key_client):
         stock = api_key_client.stock
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         stock.technical.macd(symbol='2330')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/stock/technical/macd/2330',
@@ -470,7 +507,7 @@ class TestStockRestTechnicalClient:
 
     def test_technical_macd_bearer_token(self, mocker, bearer_client):
         stock = bearer_client.stock
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         stock.technical.macd(symbol='2330')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/stock/technical/macd/2330',
@@ -479,7 +516,7 @@ class TestStockRestTechnicalClient:
 
     def test_technical_bb_api_key(self, mocker, api_key_client):
         stock = api_key_client.stock
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         stock.technical.bb(symbol='2330')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/stock/technical/bb/2330',
@@ -488,7 +525,7 @@ class TestStockRestTechnicalClient:
 
     def test_technical_bb_bearer_token(self, mocker, bearer_client):
         stock = bearer_client.stock
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         stock.technical.bb(symbol='2330')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/stock/technical/bb/2330',
@@ -555,7 +592,7 @@ class TestRestClientRegressionTests:
     def test_existing_api_endpoints_still_work(self, mocker, api_key_client):
         # 回歸測試：確保現有的 API 端點仍然正常工作
         stock = api_key_client.stock
-        mock_get = mocker.patch('requests.get')
+        mock_get = _configure_get(mocker.patch('requests.get'))
         
         # 測試幾個主要的 API 端點
         stock.intraday.quote(symbol='2330')
