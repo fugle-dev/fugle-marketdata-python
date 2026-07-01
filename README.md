@@ -26,7 +26,30 @@ The library is an isomorphic Python client that supports REST API and WebSocket.
 client = RestClient(api_key = 'YOUR_API_KEY')
 stock = client.stock  # Stock REST API client
 print(stock.intraday.quote(symbol="2330"))
+
+futopt = client.futopt  # Futures & Options REST API client
 ```
+
+#### Futures & Options spread contracts
+
+Spread (combination) contract symbols contain a `/` separator (e.g. `MXFA6/C6`).
+The symbol is URL-encoded automatically, so you can pass it as-is. Their quotes
+may carry **negative** prices, and the quote response includes trial-matching
+(試搓) fields `lastTrial` / `isTrial`.
+
+```py
+# List tradable spread contracts (pass the string "true", not a Python bool)
+print(futopt.intraday.tickers(type="FUTURE", isSpread="true"))
+
+# Quote a spread contract
+print(futopt.intraday.quote(symbol="MXFA6/C6"))
+
+# Fetch trial-matching (試搓) trade ticks
+print(futopt.intraday.trades(symbol="TXFA6", isTrial=True))
+```
+
+The futopt WebSocket `books` channel may also include an extended 6th order-book
+level (`derivedBid` / `derivedAsk`) and an `isTrial` flag during the trial session.
 
 ### WebSocket API
 
