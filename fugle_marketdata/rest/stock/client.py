@@ -3,6 +3,7 @@ from .historical import Historical
 from .snapshot import Snapshot
 from .technical import Technical
 from .corporate_actions import CorporateActions
+from .ownership import Ownership
 
 
 class RestStockClient:
@@ -29,3 +30,7 @@ class RestStockClient:
     @property
     def corporate_actions(self):
         return CorporateActions(**self.config)
+
+    @property
+    def ownership(self):
+        return Ownership(**self.config)
