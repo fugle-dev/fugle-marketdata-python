@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.5.0rc1](https://github.com/fugle-dev/fugle-marketdata-python/compare/2.4.1...2.5.0rc1) (2026-07-03)
+
+
+### Features
+
+* url-encode futopt symbols for spread contracts + trial trades filter ([8bbf1b4](https://github.com/fugle-dev/fugle-marketdata-python/commit/8bbf1b4aa9e472929cc381f3e0bc12594943afcf))
+* add stock ownership etf_holdings REST endpoint ([b120d57](https://github.com/fugle-dev/fugle-marketdata-python/commit/b120d5787e5802a42c6da50c585bac01c2cd5440))
+* **websocket:** freshness-based health check with disconnect reason ([eedc9d3](https://github.com/fugle-dev/fugle-marketdata-python/commit/eedc9d389e447d8df320ada3952f8047dc35554e))
+
+
+### Bug Fixes
+
+* **websocket:** clamp max_missed_pongs to a minimum of 1 ([2b622f7](https://github.com/fugle-dev/fugle-marketdata-python/commit/2b622f717872701f6327f4905401feb26d4fdff8))
+
 ## [2.4.1](https://github.com/fugle-dev/fugle-marketdata-python/compare/2.4.0...2.4.1) (2026-01-12)
 
 
