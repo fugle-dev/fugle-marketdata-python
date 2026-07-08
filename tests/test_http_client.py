@@ -255,9 +255,9 @@ class TestStockRestOwnershipClient:
         stock = api_key_client.stock
         mock_get = mocker.patch('requests.get')
         mock_get.return_value.status_code = 200
-        stock.ownership.etf_holdings(symbol='0050', **{'from': '2026-05-01'}, to='2026-05-21', sort='desc', code='2330')
+        stock.ownership.etf_holdings(symbol='0050', **{'from': '2026-05-01'}, to='2026-05-21', sort='desc')
         mock_get.assert_called_once_with(
-            'https://api.fugle.tw/marketdata/v1.0/stock/ownership/etf-holdings/0050?from=2026-05-01&to=2026-05-21&sort=desc&code=2330',
+            'https://api.fugle.tw/marketdata/v1.0/stock/ownership/etf-holdings/0050?from=2026-05-01&to=2026-05-21&sort=desc',
             headers={'X-API-KEY': 'api-key'}
         )
 
