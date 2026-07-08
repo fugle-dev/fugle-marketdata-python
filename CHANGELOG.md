@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.0rc2](https://github.com/fugle-dev/fugle-marketdata-python/compare/2.5.0rc1...2.5.0rc2) (2026-07-08)
+
+
+### Code Refactoring
+
+* **etf:** remove code query param from etf-holdings to match server MR !376 ([fa43524](https://github.com/fugle-dev/fugle-marketdata-python/commit/fa43524))
+
 ## [2.5.0rc1](https://github.com/fugle-dev/fugle-marketdata-python/compare/2.4.1...2.5.0rc1) (2026-07-03)
 
 
