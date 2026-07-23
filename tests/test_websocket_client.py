@@ -91,7 +91,7 @@ class TestWebSocketClientFactoryUrlConstruction:
         assert stock.config['base_url'] == 'wss://api.fugle.tw/marketdata/v1.0/stock/streaming'
         
         futopt = api_key_client.futopt
-        assert futopt.config['base_url'] == 'wss://api.fugle.tw/marketdata/v1.0/futopt/streaming'
+        assert futopt.config['base_url'] == 'wss://api.fugle.tw/marketdata/v1.1/futopt/streaming'
 
     def test_custom_base_url_construction(self, custom_base_url_client):
         # 測試自訂 base_url 的 WebSocket URL 構造
@@ -119,6 +119,76 @@ class TestWebSocketClientFactoryUrlConstruction:
         assert stock2.config['base_url'] == 'wss://ws2.example.com/stock/streaming'
 
 
+class TestWebSocketClientFactoryVersion:
+    BASE = 'wss://api.fugle.tw/marketdata'
+
+    def test_defaults_to_each_product_latest(self, api_key_client):
+        assert api_key_client.futopt.config['base_url'] == f'{self.BASE}/v1.1/futopt/streaming'
+        assert api_key_client.stock.config['base_url'] == f'{self.BASE}/v1.0/stock/streaming'
+
+    def test_scalar_version_applies_to_futopt(self):
+        client = WebSocketClient(api_key='api-key', version='v1.1')
+        assert client.futopt.config['base_url'] == f'{self.BASE}/v1.1/futopt/streaming'
+
+    def test_scalar_version_applies_to_every_product_that_serves_it(self):
+        client = WebSocketClient(api_key='api-key', version='v1.0')
+        assert client.futopt.config['base_url'] == f'{self.BASE}/v1.0/futopt/streaming'
+        assert client.stock.config['base_url'] == f'{self.BASE}/v1.0/stock/streaming'
+
+    def test_scalar_version_raises_for_product_that_does_not_serve_it(self):
+        client = WebSocketClient(api_key='api-key', version='v1.1')
+        with pytest.raises(TypeError) as excinfo:
+            client.stock
+        assert str(excinfo.value) == (
+            "stock streaming does not support v1.1 (supported: v1.0). "
+            "Use version={'futopt': 'v1.1'} to target a single product."
+        )
+
+    def test_version_mapping(self):
+        client = WebSocketClient(api_key='api-key', version={'futopt': 'v1.1'})
+        assert client.futopt.config['base_url'] == f'{self.BASE}/v1.1/futopt/streaming'
+        assert client.stock.config['base_url'] == f'{self.BASE}/v1.0/stock/streaming'
+
+    def test_version_mapping_pins_futopt_back_to_v1_0(self):
+        client = WebSocketClient(api_key='api-key', version={'futopt': 'v1.0'})
+        assert client.futopt.config['base_url'] == f'{self.BASE}/v1.0/futopt/streaming'
+
+    def test_version_mapping_raises_for_unsupported_pair(self):
+        client = WebSocketClient(api_key='api-key', version={'stock': 'v1.1'})
+        with pytest.raises(TypeError) as excinfo:
+            client.stock
+        assert 'stock streaming does not support v1.1' in str(excinfo.value)
+
+    def test_custom_base_url_untouched_without_version(self):
+        client = WebSocketClient(api_key='api-key', base_url='wss://custom-ws.example.com/v2.0')
+        assert client.futopt.config['base_url'] == 'wss://custom-ws.example.com/v2.0/futopt/streaming'
+
+    def test_custom_base_url_version_segment_swapped(self):
+        client = WebSocketClient(
+            api_key='api-key',
+            base_url='wss://api-dev.fugle.tw/marketdata/v1.0',
+            version={'futopt': 'v1.1'},
+        )
+        assert client.futopt.config['base_url'] == 'wss://api-dev.fugle.tw/marketdata/v1.1/futopt/streaming'
+        assert client.stock.config['base_url'] == 'wss://api-dev.fugle.tw/marketdata/v1.0/stock/streaming'
+
+    def test_custom_base_url_version_segment_swapped_with_trailing_slashes(self):
+        client = WebSocketClient(
+            api_key='api-key',
+            base_url='wss://api-dev.fugle.tw/marketdata/v1.0//',
+            version={'futopt': 'v1.1'},
+        )
+        assert client.futopt.config['base_url'] == 'wss://api-dev.fugle.tw/marketdata/v1.1/futopt/streaming'
+
+    def test_custom_base_url_without_version_segment_untouched(self):
+        client = WebSocketClient(
+            api_key='api-key',
+            base_url='wss://ws.example.com/api',
+            version={'futopt': 'v1.1'},
+        )
+        assert client.futopt.config['base_url'] == 'wss://ws.example.com/api/futopt/streaming'
+
+
 class TestWebSocketClientRegressionTests:
     def test_default_behavior_without_base_url(self, api_key_client):
         # 回歸測試：確保不提供 base_url 時使用預設值
@@ -126,7 +196,7 @@ class TestWebSocketClientRegressionTests:
         assert 'wss://api.fugle.tw/marketdata/v1.0/stock/streaming' in stock.config['base_url']
         
         futopt = api_key_client.futopt
-        assert 'wss://api.fugle.tw/marketdata/v1.0/futopt/streaming' in futopt.config['base_url']
+        assert 'wss://api.fugle.tw/marketdata/v1.1/futopt/streaming' in futopt.config['base_url']
 
     def test_api_key_authentication_preserved(self, api_key_client):
         # 回歸測試：確保 API key 認證仍然正常
