@@ -1,3 +1,4 @@
+from ..base_url import with_version
 from ..client_factory import ClientFactory
 from ..constants import FUGLE_MARKETDATA_API_REST_BASE_URL, FUGLE_MARKETDATA_API_VERSION
 from .stock import RestStockClient
@@ -19,11 +20,16 @@ class RestClientFactory(ClientFactory):
         return self.get_client('futopt')
 
     def get_client(self, type):
-        base_url = self.options.get('base_url')
-        if not base_url:
-            base_url = f"{FUGLE_MARKETDATA_API_REST_BASE_URL}/{FUGLE_MARKETDATA_API_VERSION}"
+        # Same rule as streaming: base_url is host and path prefix, the SDK owns
+        # the version segment. REST serves one version, so there's no option to
+        # choose it with — but a version written into base_url is still rejected
+        # rather than silently doubled.
+        base_url = with_version(
+            self.options.get('base_url') or FUGLE_MARKETDATA_API_REST_BASE_URL,
+            FUGLE_MARKETDATA_API_VERSION,
+        )
 
-        url = f'{base_url.rstrip("/")}/{type}'
+        url = f'{base_url}/{type}'
 
         if type in self.__clients:
             return self.__clients[type]

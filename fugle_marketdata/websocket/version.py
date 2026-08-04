@@ -1,6 +1,9 @@
-import re
-
 from ..constants import FUGLE_MARKETDATA_WS_SUPPORTED_VERSIONS
+
+#: Appended to `base_url` rejections, pointing at the option that owns the version.
+VERSION_OPTION_HINT = (
+    "The version comes from the `version` option, e.g. version={'futopt': 'v1.1'}."
+)
 
 
 def supported_versions(product):
@@ -30,22 +33,34 @@ def _assert_supported(product, version, hint):
 def resolve_version(product, version=None):
     """Resolve the streaming version for a product from the `version` option.
 
-    Omitted entirely, or omitted for this product in the mapping form, means the
-    product's latest. Nothing is ever silently clamped: asking for a version a
-    product doesn't serve raises rather than quietly handing back an older one.
+    Omitted entirely, an empty mapping, or omitted for this product all mean the
+    same thing: that product's latest. Nothing is ever silently clamped — asking
+    for a version a product doesn't serve raises rather than quietly handing back
+    an older one.
+
+    A bare version string used to be accepted as "this version for every
+    product", but which product it applied to wasn't known until a client was
+    taken off the factory, so an unsupported pairing only surfaced then — and
+    with the products serving different version sets, the only scalar that never
+    raises is the one every product happens to share. The mapping form says the
+    same thing without the trap.
     """
     if version is None:
         return latest_version(product)
 
     if isinstance(version, str):
         alternatives = _products_supporting(version)
-        hint = (
-            f"Use version={{'{alternatives[0]}': '{version}'}} to target a single product."
+        suggestion = (
+            'Use version={'
+            + ', '.join(f"'{p}': '{version}'" for p in alternatives)
+            + '}.'
             if alternatives
-            else f"No product serves {version}."
+            else f'No product serves {version}.'
         )
-        _assert_supported(product, version, hint)
-        return version
+        raise TypeError(
+            f"version must be a per-product mapping, not the bare string "
+            f"'{version}'. {suggestion}"
+        )
 
     requested = version.get(product)
     if requested is None:
@@ -57,18 +72,3 @@ def resolve_version(product, version=None):
         f"Remove it from the version mapping to use {latest_version(product)}.",
     )
     return requested
-
-
-_VERSION_SEGMENT = re.compile(r'/v\d+\.\d+$')
-
-
-def apply_version_to_base_url(base_url, version):
-    """Point an explicitly supplied `base_url` at `version` by swapping its
-    trailing version segment (`.../marketdata/v1.0` -> `.../marketdata/v1.1`).
-
-    A base_url without a recognizable version segment is left alone — it may be
-    a proxy or an internal deployment that doesn't encode a version in its path,
-    and inventing one would break it.
-    """
-    trimmed = base_url.rstrip('/')
-    return _VERSION_SEGMENT.sub(f'/{version}', trimmed)
