@@ -3,6 +3,30 @@ import requests
 from ..exceptions import FugleAPIError
 
 
+class RestProductClient(object):
+    """What a caller holds when they take `.stock` or `.futopt` off the factory.
+
+    The Node SDK gets this for free — its product clients extend `RestClient`.
+    Here the product clients are facades over the endpoint groups rather than
+    `BaseRest` subclasses, so they need a shared ancestor of their own.
+    """
+
+    def __init__(self, **config):
+        # config: base_url, api_key?, bearer_token?
+        self.config = config
+
+    @property
+    def base_url(self):
+        """The prefix every request from this client is built on, fully
+        resolved — host, version segment and product. Endpoints are appended
+        to it.
+
+        The version segment is chosen by the SDK rather than written by the
+        caller, so this is the only way to see what a client resolved to.
+        """
+        return self.config['base_url']
+
+
 class BaseRest(object):
     def __init__(self, **config):
         self.config = config
