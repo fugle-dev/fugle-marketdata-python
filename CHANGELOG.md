@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.5.0rc4](https://github.com/fugle-dev/fugle-marketdata-python/compare/2.5.0rc3...2.5.0rc4) (2026-08-04)
+
+
+### Bug Fixes
+
+* **client:** separate base_url from the API version ([77aee12](https://github.com/fugle-dev/fugle-marketdata-python/commit/77aee127afbae7a8c6976bf1caa0c228323869bf))
+
+
+### BREAKING CHANGES
+
+* a base_url ending in a version segment is now rejected
+with a TypeError naming the prefix to use instead — pass the host and
+path prefix only. The scalar `version` form is removed; use the
+per-product mapping, e.g. version={'futopt': 'v1.1'}.
+
 ## [2.5.0rc3](https://github.com/fugle-dev/fugle-marketdata-python/compare/2.5.0rc2...2.5.0rc3) (2026-07-23)
 
 
