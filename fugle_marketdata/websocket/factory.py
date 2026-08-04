@@ -36,7 +36,11 @@ class WebSocketClientFactory(ClientFactory):
         base_url = self.__resolve_base_url(type)
         url = f'{base_url}/{type}/streaming'
 
-        client_options = {**self.options, 'base_url': url}
+        # The factory's options are not the client's. `base_url` means a host
+        # prefix here and a full endpoint there, so it is dropped rather than
+        # reused under the same name — the client reads `url`.
+        client_options = {**self.options, 'url': url}
+        client_options.pop('base_url', None)
 
         if type == 'stock':
             client = WebSocketStockClient(**client_options)

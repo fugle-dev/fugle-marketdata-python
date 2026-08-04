@@ -66,12 +66,12 @@ class TestWebSocketClient:
     def test_stock_with_custom_base_url(self, custom_base_url_client):
         stock = custom_base_url_client.stock
         assert isinstance(stock, WebSocketStockClient)
-        assert stock.config['base_url'] == 'wss://custom-ws.example.com/v1.0/stock/streaming'
+        assert stock.url == 'wss://custom-ws.example.com/v1.0/stock/streaming'
 
     def test_futopt_with_custom_base_url(self, custom_base_url_client):
         futopt = custom_base_url_client.futopt
         assert isinstance(futopt, WebSocketFutOptClient)
-        assert futopt.config['base_url'] == 'wss://custom-ws.example.com/v1.1/futopt/streaming'
+        assert futopt.url == 'wss://custom-ws.example.com/v1.1/futopt/streaming'
 
     def test_stock_and_futopt_different_instances(self, api_key_client):
         stock = api_key_client.stock
@@ -88,24 +88,24 @@ class TestWebSocketClientFactoryUrlConstruction:
     def test_default_base_url_construction(self, api_key_client):
         # 測試預設 base_url 的 WebSocket URL 構造
         stock = api_key_client.stock
-        assert stock.config['base_url'] == 'wss://api.fugle.tw/marketdata/v1.0/stock/streaming'
+        assert stock.url == 'wss://api.fugle.tw/marketdata/v1.0/stock/streaming'
         
         futopt = api_key_client.futopt
-        assert futopt.config['base_url'] == 'wss://api.fugle.tw/marketdata/v1.1/futopt/streaming'
+        assert futopt.url == 'wss://api.fugle.tw/marketdata/v1.1/futopt/streaming'
 
     def test_custom_base_url_construction(self, custom_base_url_client):
         # 測試自訂 base_url 的 WebSocket URL 構造
         stock = custom_base_url_client.stock
-        assert stock.config['base_url'] == 'wss://custom-ws.example.com/v1.0/stock/streaming'
+        assert stock.url == 'wss://custom-ws.example.com/v1.0/stock/streaming'
         
         futopt = custom_base_url_client.futopt
-        assert futopt.config['base_url'] == 'wss://custom-ws.example.com/v1.1/futopt/streaming'
+        assert futopt.url == 'wss://custom-ws.example.com/v1.1/futopt/streaming'
 
     def test_url_construction_with_trailing_slash(self):
         # 測試帶有結尾斜線的 base_url，確保沒有雙斜線
         client = WebSocketClient(api_key='test-key', base_url='wss://ws.example.com/marketdata/')
         stock = client.stock
-        assert stock.config['base_url'] == 'wss://ws.example.com/marketdata/v1.0/stock/streaming'
+        assert stock.url == 'wss://ws.example.com/marketdata/v1.0/stock/streaming'
 
     def test_multiple_clients_independent_base_urls(self):
         # 測試多個 WebSocket 客戶端的 base_url 是獨立的
@@ -115,21 +115,21 @@ class TestWebSocketClientFactoryUrlConstruction:
         stock1 = client1.stock
         stock2 = client2.stock
 
-        assert stock1.config['base_url'] == 'wss://ws1.example.com/v1.0/stock/streaming'
-        assert stock2.config['base_url'] == 'wss://ws2.example.com/v1.0/stock/streaming'
+        assert stock1.url == 'wss://ws1.example.com/v1.0/stock/streaming'
+        assert stock2.url == 'wss://ws2.example.com/v1.0/stock/streaming'
 
 
 class TestWebSocketClientFactoryVersion:
     BASE = 'wss://api.fugle.tw/marketdata'
 
     def test_defaults_to_each_product_latest(self, api_key_client):
-        assert api_key_client.futopt.config['base_url'] == f'{self.BASE}/v1.1/futopt/streaming'
-        assert api_key_client.stock.config['base_url'] == f'{self.BASE}/v1.0/stock/streaming'
+        assert api_key_client.futopt.url == f'{self.BASE}/v1.1/futopt/streaming'
+        assert api_key_client.stock.url == f'{self.BASE}/v1.0/stock/streaming'
 
     def test_empty_mapping_matches_no_version_at_all(self):
         client = WebSocketClient(api_key='api-key', version={})
-        assert client.futopt.config['base_url'] == f'{self.BASE}/v1.1/futopt/streaming'
-        assert client.stock.config['base_url'] == f'{self.BASE}/v1.0/stock/streaming'
+        assert client.futopt.url == f'{self.BASE}/v1.1/futopt/streaming'
+        assert client.stock.url == f'{self.BASE}/v1.0/stock/streaming'
 
     def test_scalar_version_is_rejected(self):
         client = WebSocketClient(api_key='api-key', version='v1.1')
@@ -151,12 +151,12 @@ class TestWebSocketClientFactoryVersion:
 
     def test_version_mapping(self):
         client = WebSocketClient(api_key='api-key', version={'futopt': 'v1.1'})
-        assert client.futopt.config['base_url'] == f'{self.BASE}/v1.1/futopt/streaming'
-        assert client.stock.config['base_url'] == f'{self.BASE}/v1.0/stock/streaming'
+        assert client.futopt.url == f'{self.BASE}/v1.1/futopt/streaming'
+        assert client.stock.url == f'{self.BASE}/v1.0/stock/streaming'
 
     def test_version_mapping_pins_futopt_back_to_v1_0(self):
         client = WebSocketClient(api_key='api-key', version={'futopt': 'v1.0'})
-        assert client.futopt.config['base_url'] == f'{self.BASE}/v1.0/futopt/streaming'
+        assert client.futopt.url == f'{self.BASE}/v1.0/futopt/streaming'
 
     def test_version_mapping_raises_for_unsupported_pair(self):
         client = WebSocketClient(api_key='api-key', version={'stock': 'v1.1'})
@@ -166,8 +166,8 @@ class TestWebSocketClientFactoryVersion:
 
     def test_custom_base_url_is_versioned_per_product_without_version_option(self):
         client = WebSocketClient(api_key='api-key', base_url='wss://fubon-api.fugle.tw/marketdata')
-        assert client.futopt.config['base_url'] == 'wss://fubon-api.fugle.tw/marketdata/v1.1/futopt/streaming'
-        assert client.stock.config['base_url'] == 'wss://fubon-api.fugle.tw/marketdata/v1.0/stock/streaming'
+        assert client.futopt.url == 'wss://fubon-api.fugle.tw/marketdata/v1.1/futopt/streaming'
+        assert client.stock.url == 'wss://fubon-api.fugle.tw/marketdata/v1.0/stock/streaming'
 
     def test_version_option_applies_to_custom_base_url(self):
         client = WebSocketClient(
@@ -175,8 +175,8 @@ class TestWebSocketClientFactoryVersion:
             base_url='wss://api-dev.fugle.tw/marketdata',
             version={'futopt': 'v1.0'},
         )
-        assert client.futopt.config['base_url'] == 'wss://api-dev.fugle.tw/marketdata/v1.0/futopt/streaming'
-        assert client.stock.config['base_url'] == 'wss://api-dev.fugle.tw/marketdata/v1.0/stock/streaming'
+        assert client.futopt.url == 'wss://api-dev.fugle.tw/marketdata/v1.0/futopt/streaming'
+        assert client.stock.url == 'wss://api-dev.fugle.tw/marketdata/v1.0/stock/streaming'
 
     def test_base_url_carrying_a_version_segment_is_rejected(self):
         client = WebSocketClient(api_key='api-key', base_url='wss://api-dev.fugle.tw/marketdata/v1.0')
@@ -199,10 +199,10 @@ class TestWebSocketClientRegressionTests:
     def test_default_behavior_without_base_url(self, api_key_client):
         # 回歸測試：確保不提供 base_url 時使用預設值
         stock = api_key_client.stock
-        assert 'wss://api.fugle.tw/marketdata/v1.0/stock/streaming' in stock.config['base_url']
+        assert 'wss://api.fugle.tw/marketdata/v1.0/stock/streaming' in stock.url
         
         futopt = api_key_client.futopt
-        assert 'wss://api.fugle.tw/marketdata/v1.1/futopt/streaming' in futopt.config['base_url']
+        assert 'wss://api.fugle.tw/marketdata/v1.1/futopt/streaming' in futopt.url
 
     def test_api_key_authentication_preserved(self, api_key_client):
         # 回歸測試：確保 API key 認證仍然正常
@@ -237,27 +237,27 @@ class TestWebSocketClientUrlNormalization:
         # 測試沒有結尾斜線的 base_url
         client = WebSocketClient(api_key='test-key', base_url='wss://ws.example.com/marketdata')
         stock = client.stock
-        assert stock.config['base_url'] == 'wss://ws.example.com/marketdata/v1.0/stock/streaming'
+        assert stock.url == 'wss://ws.example.com/marketdata/v1.0/stock/streaming'
 
     def test_single_trailing_slash_base_url(self):
         # 測試單一結尾斜線的 base_url
         client = WebSocketClient(api_key='test-key', base_url='wss://ws.example.com/marketdata/')
         stock = client.stock
-        assert stock.config['base_url'] == 'wss://ws.example.com/marketdata/v1.0/stock/streaming'
+        assert stock.url == 'wss://ws.example.com/marketdata/v1.0/stock/streaming'
 
     def test_multiple_trailing_slashes_base_url(self):
         # 測試多個結尾斜線的 base_url
         client = WebSocketClient(api_key='test-key', base_url='wss://ws.example.com/marketdata///')
         stock = client.stock
-        assert stock.config['base_url'] == 'wss://ws.example.com/marketdata/v1.0/stock/streaming'
+        assert stock.url == 'wss://ws.example.com/marketdata/v1.0/stock/streaming'
 
     def test_non_version_path_segment_stays_part_of_the_prefix(self):
         # 測試 /api/v2 這種不是 vX.Y 的路徑段會原樣保留在 prefix 裡
         client = WebSocketClient(api_key='test-key', base_url='wss://ws.example.com/api/v2/')
         stock = client.stock
-        assert stock.config['base_url'] == 'wss://ws.example.com/api/v2/v1.0/stock/streaming'
+        assert stock.url == 'wss://ws.example.com/api/v2/v1.0/stock/streaming'
         futopt = client.futopt
-        assert futopt.config['base_url'] == 'wss://ws.example.com/api/v2/v1.1/futopt/streaming'
+        assert futopt.url == 'wss://ws.example.com/api/v2/v1.1/futopt/streaming'
 
 
 def _build_health_client(max_missed_pongs=2, ping_interval=30000):
@@ -270,7 +270,7 @@ def _build_health_client(max_missed_pongs=2, ping_interval=30000):
         max_missed_pongs=max_missed_pongs,
     )
     client = CoreWebSocketClient(
-        base_url='wss://ws.example.com/stock/streaming',
+        url='wss://ws.example.com/stock/streaming',
         api_key='api-key',
         health_check=health,
     )
@@ -403,7 +403,7 @@ class TestWebSocketHealthCheck:
         # Use a real (un-stubbed) core client to check on_close threading.
         health = HealthCheckConfig(enabled=True)
         client = CoreWebSocketClient(
-            base_url='wss://ws.example.com/stock/streaming',
+            url='wss://ws.example.com/stock/streaming',
             api_key='api-key',
             health_check=health,
         )
@@ -415,3 +415,14 @@ class TestWebSocketHealthCheck:
         assert received['args'] == (1000, 'normal')
         # Only two args: no reason payload.
         assert len(received['args']) == 2
+
+
+class TestWebSocketClientConfigKeys:
+    # `url` 本身由上面每一組 URL 測試涵蓋——它們都是讀 `.url` 斷言的。
+    # 這裡釘住的是 factory 不會把自己的 `base_url` 語意漏進 client。
+    def test_client_config_carries_the_endpoint_under_url_only(self):
+        futopt = WebSocketClient(api_key='api-key', base_url='wss://ws.example.com/marketdata').futopt
+        assert futopt.config['url'] == futopt.url
+        # factory 的 `base_url` 是 host prefix，跟 client 的完整 endpoint 同名異義，
+        # 所以不沿用——留著會是個看起來合理、意思卻不同的值。
+        assert 'base_url' not in futopt.config

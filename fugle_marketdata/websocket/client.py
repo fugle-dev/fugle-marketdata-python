@@ -41,7 +41,7 @@ class WebSocketClient():
         self.ee = EventEmitter()
         self.ee.on(CONNECT_EVENT, self.__authenticate)
         self.__ws = websocket.WebSocketApp(
-            self.config.get('base_url'),
+            self.url,
             on_open=self.__on_open,
             on_close=self.__on_close,
             on_error=self.__on_error,
@@ -57,6 +57,17 @@ class WebSocketClient():
         self.last_message_at = 0.0
         self.last_ping_at = 0.0
         self.__disconnect_reason = None
+
+    @property
+    def url(self):
+        """The endpoint this client connects to, fully resolved — host, version
+        segment, product and `/streaming`.
+
+        The version segment is chosen by the SDK from the `version` option
+        rather than written by the caller, so this is the only way to see which
+        version a client actually ended up on.
+        """
+        return self.config['url']
 
     def ping(self, message):
         message = {

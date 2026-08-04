@@ -4,13 +4,10 @@ from .snapshot import Snapshot
 from .technical import Technical
 from .corporate_actions import CorporateActions
 from .ownership import Ownership
+from ..base_rest import RestProductClient
 
 
-class RestStockClient:
-    def __init__(self, **config):
-        # config: base_url, api_key?, bearer_token?
-        self.config = config
-
+class RestStockClient(RestProductClient):
     @property
     def intraday(self):
         return Intraday(**self.config)

@@ -67,7 +67,7 @@ class TestStockRestClient:
     def test_stock_with_custom_base_url(self, custom_base_url_client):
         stock = custom_base_url_client.stock
         assert isinstance(stock, RestStockClient)
-        assert stock.config['base_url'] == 'https://custom-api.example.com/v1.0/stock'
+        assert stock.base_url == 'https://custom-api.example.com/v1.0/stock'
 
     def test_stock_and_futopt_different_instances(self, api_key_client):
         stock = api_key_client.stock
@@ -573,24 +573,24 @@ class TestRestClientFactoryUrlConstruction:
     def test_default_base_url_construction(self, api_key_client):
         # 測試預設 base_url 的 URL 構造
         stock = api_key_client.stock
-        assert stock.config['base_url'] == 'https://api.fugle.tw/marketdata/v1.0/stock'
+        assert stock.base_url == 'https://api.fugle.tw/marketdata/v1.0/stock'
         
         futopt = api_key_client.futopt
-        assert futopt.config['base_url'] == 'https://api.fugle.tw/marketdata/v1.0/futopt'
+        assert futopt.base_url == 'https://api.fugle.tw/marketdata/v1.0/futopt'
 
     def test_custom_base_url_construction(self, custom_base_url_client):
         # 測試自訂 base_url 的 URL 構造
         stock = custom_base_url_client.stock
-        assert stock.config['base_url'] == 'https://custom-api.example.com/v1.0/stock'
+        assert stock.base_url == 'https://custom-api.example.com/v1.0/stock'
         
         futopt = custom_base_url_client.futopt
-        assert futopt.config['base_url'] == 'https://custom-api.example.com/v1.0/futopt'
+        assert futopt.base_url == 'https://custom-api.example.com/v1.0/futopt'
 
     def test_url_construction_with_trailing_slash(self):
         # 測試帶有結尾斜線的 base_url，確保沒有雙斜線
         client = RestClient(api_key='test-key', base_url='https://api.example.com/marketdata/')
         stock = client.stock
-        assert stock.config['base_url'] == 'https://api.example.com/marketdata/v1.0/stock'
+        assert stock.base_url == 'https://api.example.com/marketdata/v1.0/stock'
 
     def test_multiple_clients_independent_base_urls(self):
         # 測試多個客戶端的 base_url 是獨立的
@@ -600,18 +600,18 @@ class TestRestClientFactoryUrlConstruction:
         stock1 = client1.stock
         stock2 = client2.stock
         
-        assert stock1.config['base_url'] == 'https://api1.example.com/v1.0/stock'
-        assert stock2.config['base_url'] == 'https://api2.example.com/v1.0/stock'
+        assert stock1.base_url == 'https://api1.example.com/v1.0/stock'
+        assert stock2.base_url == 'https://api2.example.com/v1.0/stock'
 
 
 class TestRestClientRegressionTests:
     def test_default_behavior_without_base_url(self, api_key_client):
         # 回歸測試：確保不提供 base_url 時使用預設值
         stock = api_key_client.stock
-        assert 'https://api.fugle.tw/marketdata/v1.0/stock' in stock.config['base_url']
+        assert 'https://api.fugle.tw/marketdata/v1.0/stock' in stock.base_url
         
         futopt = api_key_client.futopt
-        assert 'https://api.fugle.tw/marketdata/v1.0/futopt' in futopt.config['base_url']
+        assert 'https://api.fugle.tw/marketdata/v1.0/futopt' in futopt.base_url
 
     def test_api_key_authentication_preserved(self, api_key_client):
         # 回歸測試：確保 API key 認證仍然正常
@@ -648,24 +648,24 @@ class TestRestClientUrlNormalization:
         # 測試沒有結尾斜線的 base_url
         client = RestClient(api_key='test-key', base_url='https://api.example.com/marketdata')
         stock = client.stock
-        assert stock.config['base_url'] == 'https://api.example.com/marketdata/v1.0/stock'
+        assert stock.base_url == 'https://api.example.com/marketdata/v1.0/stock'
         
     def test_single_trailing_slash_base_url(self):
         # 測試單一結尾斜線的 base_url
         client = RestClient(api_key='test-key', base_url='https://api.example.com/marketdata/')
         stock = client.stock
-        assert stock.config['base_url'] == 'https://api.example.com/marketdata/v1.0/stock'
+        assert stock.base_url == 'https://api.example.com/marketdata/v1.0/stock'
         
     def test_multiple_trailing_slashes_base_url(self):
         # 測試多個結尾斜線的 base_url
         client = RestClient(api_key='test-key', base_url='https://api.example.com/marketdata///')
         stock = client.stock
-        assert stock.config['base_url'] == 'https://api.example.com/marketdata/v1.0/stock'
+        assert stock.base_url == 'https://api.example.com/marketdata/v1.0/stock'
         
     def test_base_url_with_path_and_trailing_slash(self):
         # 測試帶有路徑和結尾斜線的 base_url
         client = RestClient(api_key='test-key', base_url='https://api.example.com/api/v2/')
         stock = client.stock
-        assert stock.config['base_url'] == 'https://api.example.com/api/v2/v1.0/stock'
+        assert stock.base_url == 'https://api.example.com/api/v2/v1.0/stock'
         futopt = client.futopt
-        assert futopt.config['base_url'] == 'https://api.example.com/api/v2/v1.0/futopt'
+        assert futopt.base_url == 'https://api.example.com/api/v2/v1.0/futopt'
