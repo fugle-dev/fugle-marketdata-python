@@ -20,7 +20,7 @@ def bearer_client():
 
 @pytest.fixture
 def custom_base_url_client():
-    return WebSocketClient(api_key='test-key', base_url='wss://custom-ws.example.com/v2.0')
+    return WebSocketClient(api_key='test-key', base_url='wss://custom-ws.example.com')
 
 
 class TestWebSocketClientConstructor(object):
@@ -46,9 +46,9 @@ class TestWebSocketClientConstructor(object):
 
     def test_with_custom_base_url(self):
         # 測試自訂 base_url 是否正確設定
-        client = WebSocketClient(api_key='api-key', base_url='wss://custom-ws.example.com/v2.0')
+        client = WebSocketClient(api_key='api-key', base_url='wss://custom-ws.example.com')
         assert isinstance(client, WebSocketClient)
-        assert client.options['base_url'] == 'wss://custom-ws.example.com/v2.0'
+        assert client.options['base_url'] == 'wss://custom-ws.example.com'
 
 
 class TestWebSocketClient:
@@ -66,12 +66,12 @@ class TestWebSocketClient:
     def test_stock_with_custom_base_url(self, custom_base_url_client):
         stock = custom_base_url_client.stock
         assert isinstance(stock, WebSocketStockClient)
-        assert stock.config['base_url'] == 'wss://custom-ws.example.com/v2.0/stock/streaming'
+        assert stock.config['base_url'] == 'wss://custom-ws.example.com/v1.0/stock/streaming'
 
     def test_futopt_with_custom_base_url(self, custom_base_url_client):
         futopt = custom_base_url_client.futopt
         assert isinstance(futopt, WebSocketFutOptClient)
-        assert futopt.config['base_url'] == 'wss://custom-ws.example.com/v2.0/futopt/streaming'
+        assert futopt.config['base_url'] == 'wss://custom-ws.example.com/v1.1/futopt/streaming'
 
     def test_stock_and_futopt_different_instances(self, api_key_client):
         stock = api_key_client.stock
@@ -96,27 +96,27 @@ class TestWebSocketClientFactoryUrlConstruction:
     def test_custom_base_url_construction(self, custom_base_url_client):
         # 測試自訂 base_url 的 WebSocket URL 構造
         stock = custom_base_url_client.stock
-        assert stock.config['base_url'] == 'wss://custom-ws.example.com/v2.0/stock/streaming'
+        assert stock.config['base_url'] == 'wss://custom-ws.example.com/v1.0/stock/streaming'
         
         futopt = custom_base_url_client.futopt
-        assert futopt.config['base_url'] == 'wss://custom-ws.example.com/v2.0/futopt/streaming'
+        assert futopt.config['base_url'] == 'wss://custom-ws.example.com/v1.1/futopt/streaming'
 
     def test_url_construction_with_trailing_slash(self):
         # 測試帶有結尾斜線的 base_url，確保沒有雙斜線
-        client = WebSocketClient(api_key='test-key', base_url='wss://ws.example.com/v1/')
+        client = WebSocketClient(api_key='test-key', base_url='wss://ws.example.com/marketdata/')
         stock = client.stock
-        assert stock.config['base_url'] == 'wss://ws.example.com/v1/stock/streaming'
+        assert stock.config['base_url'] == 'wss://ws.example.com/marketdata/v1.0/stock/streaming'
 
     def test_multiple_clients_independent_base_urls(self):
         # 測試多個 WebSocket 客戶端的 base_url 是獨立的
         client1 = WebSocketClient(api_key='key1', base_url='wss://ws1.example.com')
         client2 = WebSocketClient(api_key='key2', base_url='wss://ws2.example.com')
-        
+
         stock1 = client1.stock
         stock2 = client2.stock
-        
-        assert stock1.config['base_url'] == 'wss://ws1.example.com/stock/streaming'
-        assert stock2.config['base_url'] == 'wss://ws2.example.com/stock/streaming'
+
+        assert stock1.config['base_url'] == 'wss://ws1.example.com/v1.0/stock/streaming'
+        assert stock2.config['base_url'] == 'wss://ws2.example.com/v1.0/stock/streaming'
 
 
 class TestWebSocketClientFactoryVersion:
@@ -126,22 +126,27 @@ class TestWebSocketClientFactoryVersion:
         assert api_key_client.futopt.config['base_url'] == f'{self.BASE}/v1.1/futopt/streaming'
         assert api_key_client.stock.config['base_url'] == f'{self.BASE}/v1.0/stock/streaming'
 
-    def test_scalar_version_applies_to_futopt(self):
-        client = WebSocketClient(api_key='api-key', version='v1.1')
+    def test_empty_mapping_matches_no_version_at_all(self):
+        client = WebSocketClient(api_key='api-key', version={})
         assert client.futopt.config['base_url'] == f'{self.BASE}/v1.1/futopt/streaming'
-
-    def test_scalar_version_applies_to_every_product_that_serves_it(self):
-        client = WebSocketClient(api_key='api-key', version='v1.0')
-        assert client.futopt.config['base_url'] == f'{self.BASE}/v1.0/futopt/streaming'
         assert client.stock.config['base_url'] == f'{self.BASE}/v1.0/stock/streaming'
 
-    def test_scalar_version_raises_for_product_that_does_not_serve_it(self):
+    def test_scalar_version_is_rejected(self):
         client = WebSocketClient(api_key='api-key', version='v1.1')
+        with pytest.raises(TypeError) as excinfo:
+            client.futopt
+        assert str(excinfo.value) == (
+            "version must be a per-product mapping, not the bare string 'v1.1'. "
+            "Use version={'futopt': 'v1.1'}."
+        )
+
+    def test_rejected_scalar_names_every_product_that_serves_it(self):
+        client = WebSocketClient(api_key='api-key', version='v1.0')
         with pytest.raises(TypeError) as excinfo:
             client.stock
         assert str(excinfo.value) == (
-            "stock streaming does not support v1.1 (supported: v1.0). "
-            "Use version={'futopt': 'v1.1'} to target a single product."
+            "version must be a per-product mapping, not the bare string 'v1.0'. "
+            "Use version={'stock': 'v1.0', 'futopt': 'v1.0'}."
         )
 
     def test_version_mapping(self):
@@ -159,34 +164,35 @@ class TestWebSocketClientFactoryVersion:
             client.stock
         assert 'stock streaming does not support v1.1' in str(excinfo.value)
 
-    def test_custom_base_url_untouched_without_version(self):
-        client = WebSocketClient(api_key='api-key', base_url='wss://custom-ws.example.com/v2.0')
-        assert client.futopt.config['base_url'] == 'wss://custom-ws.example.com/v2.0/futopt/streaming'
+    def test_custom_base_url_is_versioned_per_product_without_version_option(self):
+        client = WebSocketClient(api_key='api-key', base_url='wss://fubon-api.fugle.tw/marketdata')
+        assert client.futopt.config['base_url'] == 'wss://fubon-api.fugle.tw/marketdata/v1.1/futopt/streaming'
+        assert client.stock.config['base_url'] == 'wss://fubon-api.fugle.tw/marketdata/v1.0/stock/streaming'
 
-    def test_custom_base_url_version_segment_swapped(self):
+    def test_version_option_applies_to_custom_base_url(self):
         client = WebSocketClient(
             api_key='api-key',
-            base_url='wss://api-dev.fugle.tw/marketdata/v1.0',
-            version={'futopt': 'v1.1'},
+            base_url='wss://api-dev.fugle.tw/marketdata',
+            version={'futopt': 'v1.0'},
         )
-        assert client.futopt.config['base_url'] == 'wss://api-dev.fugle.tw/marketdata/v1.1/futopt/streaming'
+        assert client.futopt.config['base_url'] == 'wss://api-dev.fugle.tw/marketdata/v1.0/futopt/streaming'
         assert client.stock.config['base_url'] == 'wss://api-dev.fugle.tw/marketdata/v1.0/stock/streaming'
 
-    def test_custom_base_url_version_segment_swapped_with_trailing_slashes(self):
-        client = WebSocketClient(
-            api_key='api-key',
-            base_url='wss://api-dev.fugle.tw/marketdata/v1.0//',
-            version={'futopt': 'v1.1'},
+    def test_base_url_carrying_a_version_segment_is_rejected(self):
+        client = WebSocketClient(api_key='api-key', base_url='wss://api-dev.fugle.tw/marketdata/v1.0')
+        with pytest.raises(TypeError) as excinfo:
+            client.futopt
+        assert str(excinfo.value) == (
+            "base_url must not include a version segment (found '/v1.0'). "
+            "Pass the host and path prefix only: 'wss://api-dev.fugle.tw/marketdata'. "
+            "The version comes from the `version` option, e.g. version={'futopt': 'v1.1'}."
         )
-        assert client.futopt.config['base_url'] == 'wss://api-dev.fugle.tw/marketdata/v1.1/futopt/streaming'
 
-    def test_custom_base_url_without_version_segment_untouched(self):
-        client = WebSocketClient(
-            api_key='api-key',
-            base_url='wss://ws.example.com/api',
-            version={'futopt': 'v1.1'},
-        )
-        assert client.futopt.config['base_url'] == 'wss://ws.example.com/api/futopt/streaming'
+    def test_versioned_base_url_is_rejected_after_trailing_slashes_are_trimmed(self):
+        client = WebSocketClient(api_key='api-key', base_url='wss://api-dev.fugle.tw/marketdata/v1.0//')
+        with pytest.raises(TypeError) as excinfo:
+            client.futopt
+        assert "base_url must not include a version segment (found '/v1.0')" in str(excinfo.value)
 
 
 class TestWebSocketClientRegressionTests:
@@ -229,29 +235,29 @@ class TestWebSocketClientRegressionTests:
 class TestWebSocketClientUrlNormalization:
     def test_no_trailing_slash_base_url(self):
         # 測試沒有結尾斜線的 base_url
-        client = WebSocketClient(api_key='test-key', base_url='wss://ws.example.com/v1')
+        client = WebSocketClient(api_key='test-key', base_url='wss://ws.example.com/marketdata')
         stock = client.stock
-        assert stock.config['base_url'] == 'wss://ws.example.com/v1/stock/streaming'
-        
+        assert stock.config['base_url'] == 'wss://ws.example.com/marketdata/v1.0/stock/streaming'
+
     def test_single_trailing_slash_base_url(self):
         # 測試單一結尾斜線的 base_url
-        client = WebSocketClient(api_key='test-key', base_url='wss://ws.example.com/v1/')
+        client = WebSocketClient(api_key='test-key', base_url='wss://ws.example.com/marketdata/')
         stock = client.stock
-        assert stock.config['base_url'] == 'wss://ws.example.com/v1/stock/streaming'
-        
+        assert stock.config['base_url'] == 'wss://ws.example.com/marketdata/v1.0/stock/streaming'
+
     def test_multiple_trailing_slashes_base_url(self):
         # 測試多個結尾斜線的 base_url
-        client = WebSocketClient(api_key='test-key', base_url='wss://ws.example.com/v1///')
+        client = WebSocketClient(api_key='test-key', base_url='wss://ws.example.com/marketdata///')
         stock = client.stock
-        assert stock.config['base_url'] == 'wss://ws.example.com/v1/stock/streaming'
-        
-    def test_base_url_with_path_and_trailing_slash(self):
-        # 測試帶有路徑和結尾斜線的 base_url
+        assert stock.config['base_url'] == 'wss://ws.example.com/marketdata/v1.0/stock/streaming'
+
+    def test_non_version_path_segment_stays_part_of_the_prefix(self):
+        # 測試 /api/v2 這種不是 vX.Y 的路徑段會原樣保留在 prefix 裡
         client = WebSocketClient(api_key='test-key', base_url='wss://ws.example.com/api/v2/')
         stock = client.stock
-        assert stock.config['base_url'] == 'wss://ws.example.com/api/v2/stock/streaming'
+        assert stock.config['base_url'] == 'wss://ws.example.com/api/v2/v1.0/stock/streaming'
         futopt = client.futopt
-        assert futopt.config['base_url'] == 'wss://ws.example.com/api/v2/futopt/streaming'
+        assert futopt.config['base_url'] == 'wss://ws.example.com/api/v2/v1.1/futopt/streaming'
 
 
 def _build_health_client(max_missed_pongs=2, ping_interval=30000):
