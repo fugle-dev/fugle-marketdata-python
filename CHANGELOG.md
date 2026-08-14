@@ -1,46 +1,12 @@
 # Changelog
 
-## [2.5.0rc5](https://github.com/fugle-dev/fugle-marketdata-python/compare/2.5.0rc4...2.5.0rc5) (2026-08-04)
-
-
-### Features
-
-* **client:** expose the resolved endpoint on rest and websocket clients ([e359dde](https://github.com/fugle-dev/fugle-marketdata-python/commit/e359ddeb8e2f50cb78fb31bded7a46eb28df4b31))
-
-## [2.5.0rc4](https://github.com/fugle-dev/fugle-marketdata-python/compare/2.5.0rc3...2.5.0rc4) (2026-08-04)
-
-
-### Bug Fixes
-
-* **client:** separate base_url from the API version ([77aee12](https://github.com/fugle-dev/fugle-marketdata-python/commit/77aee127afbae7a8c6976bf1caa0c228323869bf))
-
-
-### BREAKING CHANGES
-
-* a base_url ending in a version segment is now rejected
-with a TypeError naming the prefix to use instead — pass the host and
-path prefix only. The scalar `version` form is removed; use the
-per-product mapping, e.g. version={'futopt': 'v1.1'}.
-
-## [2.5.0rc3](https://github.com/fugle-dev/fugle-marketdata-python/compare/2.5.0rc2...2.5.0rc3) (2026-07-23)
+## [2.5.0](https://github.com/fugle-dev/fugle-marketdata-python/compare/2.4.1...2.5.0) (2026-08-14)
 
 
 ### Features
 
 * **websocket:** add futopt streaming version option, defaulting futopt to v1.1 with trial frames ([a49552c](https://github.com/fugle-dev/fugle-marketdata-python/commit/a49552c20ad30cf0f25188beed635e8c96f61188))
-
-## [2.5.0rc2](https://github.com/fugle-dev/fugle-marketdata-python/compare/2.5.0rc1...2.5.0rc2) (2026-07-08)
-
-
-### Code Refactoring
-
-* **etf:** remove code query param from etf-holdings to match server MR !376 ([fa43524](https://github.com/fugle-dev/fugle-marketdata-python/commit/fa43524))
-
-## [2.5.0rc1](https://github.com/fugle-dev/fugle-marketdata-python/compare/2.4.1...2.5.0rc1) (2026-07-03)
-
-
-### Features
-
+* **client:** expose the resolved endpoint on rest and websocket clients ([e359dde](https://github.com/fugle-dev/fugle-marketdata-python/commit/e359ddeb8e2f50cb78fb31bded7a46eb28df4b31))
 * url-encode futopt symbols for spread contracts + trial trades filter ([8bbf1b4](https://github.com/fugle-dev/fugle-marketdata-python/commit/8bbf1b4aa9e472929cc381f3e0bc12594943afcf))
 * add stock ownership etf_holdings REST endpoint ([b120d57](https://github.com/fugle-dev/fugle-marketdata-python/commit/b120d5787e5802a42c6da50c585bac01c2cd5440))
 * **websocket:** freshness-based health check with disconnect reason ([eedc9d3](https://github.com/fugle-dev/fugle-marketdata-python/commit/eedc9d389e447d8df320ada3952f8047dc35554e))
@@ -48,7 +14,21 @@ per-product mapping, e.g. version={'futopt': 'v1.1'}.
 
 ### Bug Fixes
 
+* **client:** separate base_url from the API version ([77aee12](https://github.com/fugle-dev/fugle-marketdata-python/commit/77aee127afbae7a8c6976bf1caa0c228323869bf))
 * **websocket:** clamp max_missed_pongs to a minimum of 1 ([2b622f7](https://github.com/fugle-dev/fugle-marketdata-python/commit/2b622f717872701f6327f4905401feb26d4fdff8))
+
+
+### Code Refactoring
+
+* **etf:** remove code query param from etf-holdings to match server MR !376 ([fa43524](https://github.com/fugle-dev/fugle-marketdata-python/commit/fa4352484df68e00c2797cab613b52c0d26e1ecc))
+
+
+### Upgrading from 2.4.x
+
+* **futopt streaming now connects to v1.1 by default.** v1.1 adds trial-matching frames (TAIFEX I022/I082), which arrive on the existing trade and candle channels marked `isTrial: True`. Handlers that do not check that flag will treat trial prices and volumes as real fills. Pass `version={'futopt': 'v1.0'}` to the client to stay on the previous stream.
+* **`base_url` must not include a version segment.** It now carries the host and path prefix only — the version comes from the `version` option, and the SDK appends it. A `base_url` ending in `/v1.0` is rejected with a `TypeError` naming the prefix to use instead.
+* **The scalar `version` form is removed.** Use the per-product mapping, e.g. `version={'futopt': 'v1.1'}`. Products serve different version sets, so a bare string only ever named a version by accident.
+* **Both REST and WebSocket clients expose the endpoint they resolved** — `client.stock.base_url` and `client.futopt.url` — so the composed URL can be asserted rather than guessed.
 
 ## [2.4.1](https://github.com/fugle-dev/fugle-marketdata-python/compare/2.4.0...2.4.1) (2026-01-12)
 
