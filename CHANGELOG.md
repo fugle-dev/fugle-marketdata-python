@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.6.0rc1](https://github.com/fugle-dev/fugle-marketdata-python/compare/2.5.0...2.6.0rc1) (2026-08-20)
+
+
+### Features
+
+* add stock ownership institutional_trades, director_holdings & tdcc_distribution REST endpoints ([b265df1](https://github.com/fugle-dev/fugle-marketdata-python/commit/b265df140aecb68a83baf96f506cb71d8ad29b2d))
+
+
+### Bug Fixes
+
+* accept `from_` as an alias for the reserved-word `from` query param in REST requests ([b265df1](https://github.com/fugle-dev/fugle-marketdata-python/commit/b265df140aecb68a83baf96f506cb71d8ad29b2d))
+
 ## [2.5.0](https://github.com/fugle-dev/fugle-marketdata-python/compare/2.4.1...2.5.0) (2026-08-14)
 
 
