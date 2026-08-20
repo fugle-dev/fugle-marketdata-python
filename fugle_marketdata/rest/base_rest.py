@@ -43,6 +43,10 @@ class BaseRest(object):
 
         endpoint = path if (path.startswith('/')) else '/' + path
 
+        # `from` is a reserved keyword in Python; accept `from_` as an alias.
+        if 'from_' in params:
+            params['from'] = params.pop('from_')
+
         if len(params) == 0:
             query = ''
         else:
