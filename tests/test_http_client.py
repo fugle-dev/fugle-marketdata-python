@@ -230,6 +230,9 @@ class TestStockRestOwnershipClient:
     def test_stock_ownership(self, api_key_client):
         stock = api_key_client.stock
         assert hasattr(stock.ownership, 'etf_holdings')
+        assert hasattr(stock.ownership, 'institutional_trades')
+        assert hasattr(stock.ownership, 'director_holdings')
+        assert hasattr(stock.ownership, 'tdcc_distribution')
 
     def test_ownership_etf_holdings_api_key(self, mocker, api_key_client):
         stock = api_key_client.stock
@@ -258,6 +261,96 @@ class TestStockRestOwnershipClient:
         stock.ownership.etf_holdings(symbol='0050', **{'from': '2026-05-01'}, to='2026-05-21', sort='desc')
         mock_get.assert_called_once_with(
             'https://api.fugle.tw/marketdata/v1.0/stock/ownership/etf-holdings/0050?from=2026-05-01&to=2026-05-21&sort=desc',
+            headers={'X-API-KEY': 'api-key'}
+        )
+
+    def test_ownership_institutional_trades_api_key(self, mocker, api_key_client):
+        stock = api_key_client.stock
+        mock_get = mocker.patch('requests.get')
+        mock_get.return_value.status_code = 200
+        stock.ownership.institutional_trades(symbol='2330')
+        mock_get.assert_called_once_with(
+            'https://api.fugle.tw/marketdata/v1.0/stock/ownership/institutional-trades/2330',
+            headers={'X-API-KEY': 'api-key'}
+        )
+
+    def test_ownership_institutional_trades_bearer_token(self, bearer_client, mocker):
+        stock = bearer_client.stock
+        mock_get = mocker.patch('requests.get')
+        mock_get.return_value.status_code = 200
+        stock.ownership.institutional_trades(symbol='2330')
+        mock_get.assert_called_once_with(
+            'https://api.fugle.tw/marketdata/v1.0/stock/ownership/institutional-trades/2330',
+            headers={'Authorization': 'Bearer bearer-token'}
+        )
+
+    def test_ownership_institutional_trades_query_params(self, mocker, api_key_client):
+        stock = api_key_client.stock
+        mock_get = mocker.patch('requests.get')
+        mock_get.return_value.status_code = 200
+        stock.ownership.institutional_trades(symbol='2330', from_='2026-07-01', to='2026-07-31', sort='desc')
+        mock_get.assert_called_once_with(
+            'https://api.fugle.tw/marketdata/v1.0/stock/ownership/institutional-trades/2330?to=2026-07-31&sort=desc&from=2026-07-01',
+            headers={'X-API-KEY': 'api-key'}
+        )
+
+    def test_ownership_director_holdings_api_key(self, mocker, api_key_client):
+        stock = api_key_client.stock
+        mock_get = mocker.patch('requests.get')
+        mock_get.return_value.status_code = 200
+        stock.ownership.director_holdings(symbol='2330')
+        mock_get.assert_called_once_with(
+            'https://api.fugle.tw/marketdata/v1.0/stock/ownership/director-holdings/2330',
+            headers={'X-API-KEY': 'api-key'}
+        )
+
+    def test_ownership_director_holdings_bearer_token(self, bearer_client, mocker):
+        stock = bearer_client.stock
+        mock_get = mocker.patch('requests.get')
+        mock_get.return_value.status_code = 200
+        stock.ownership.director_holdings(symbol='2330')
+        mock_get.assert_called_once_with(
+            'https://api.fugle.tw/marketdata/v1.0/stock/ownership/director-holdings/2330',
+            headers={'Authorization': 'Bearer bearer-token'}
+        )
+
+    def test_ownership_director_holdings_query_params(self, mocker, api_key_client):
+        stock = api_key_client.stock
+        mock_get = mocker.patch('requests.get')
+        mock_get.return_value.status_code = 200
+        stock.ownership.director_holdings(symbol='2330', from_='2026-01-01', to='2026-05-31', sort='desc')
+        mock_get.assert_called_once_with(
+            'https://api.fugle.tw/marketdata/v1.0/stock/ownership/director-holdings/2330?to=2026-05-31&sort=desc&from=2026-01-01',
+            headers={'X-API-KEY': 'api-key'}
+        )
+
+    def test_ownership_tdcc_distribution_api_key(self, mocker, api_key_client):
+        stock = api_key_client.stock
+        mock_get = mocker.patch('requests.get')
+        mock_get.return_value.status_code = 200
+        stock.ownership.tdcc_distribution(symbol='2330')
+        mock_get.assert_called_once_with(
+            'https://api.fugle.tw/marketdata/v1.0/stock/ownership/tdcc-distribution/2330',
+            headers={'X-API-KEY': 'api-key'}
+        )
+
+    def test_ownership_tdcc_distribution_bearer_token(self, bearer_client, mocker):
+        stock = bearer_client.stock
+        mock_get = mocker.patch('requests.get')
+        mock_get.return_value.status_code = 200
+        stock.ownership.tdcc_distribution(symbol='2330')
+        mock_get.assert_called_once_with(
+            'https://api.fugle.tw/marketdata/v1.0/stock/ownership/tdcc-distribution/2330',
+            headers={'Authorization': 'Bearer bearer-token'}
+        )
+
+    def test_ownership_tdcc_distribution_query_params(self, mocker, api_key_client):
+        stock = api_key_client.stock
+        mock_get = mocker.patch('requests.get')
+        mock_get.return_value.status_code = 200
+        stock.ownership.tdcc_distribution(symbol='2330', from_='2026-06-01', to='2026-07-03', sort='desc')
+        mock_get.assert_called_once_with(
+            'https://api.fugle.tw/marketdata/v1.0/stock/ownership/tdcc-distribution/2330?to=2026-07-03&sort=desc&from=2026-06-01',
             headers={'X-API-KEY': 'api-key'}
         )
 
