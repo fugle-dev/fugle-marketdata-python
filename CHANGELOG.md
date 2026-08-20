@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.6.0rc1](https://github.com/fugle-dev/fugle-marketdata-python/compare/2.5.0...2.6.0rc1) (2026-08-20)
+## [2.6.0](https://github.com/fugle-dev/fugle-marketdata-python/compare/2.5.0...2.6.0) (2026-08-20)
 
 
 ### Features
