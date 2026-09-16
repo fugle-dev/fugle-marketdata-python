@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.7.0rc1](https://github.com/fugle-dev/fugle-marketdata-python/compare/2.6.0...2.7.0rc1) (2026-09-16)
+
+
+### Features
+
+* **futopt:** support historical candles ([262876d](https://github.com/fugle-dev/fugle-marketdata-python/commit/262876d1c976fc25c8dd0904115ee1f7d5b2403c))
+
 ## [2.6.0](https://github.com/fugle-dev/fugle-marketdata-python/compare/2.5.0...2.6.0) (2026-08-20)
 
 
