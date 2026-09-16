@@ -528,19 +528,49 @@ class TestFutOptRestHistoricalClient:
     def test_historical_candles_api_key(self, mocker, api_key_client):
         futopt = api_key_client.futopt
         mock_get = _configure_get(mocker.patch('requests.get'))
-        futopt.historical.candles(symbol='2330')
+        futopt.historical.candles(product='TXF/A6')
         mock_get.assert_called_once_with(
-            'https://api.fugle.tw/marketdata/v1.0/futopt/historical/candles/2330',
+            'https://api.fugle.tw/marketdata/v1.0/futopt/historical/candles/TXF%2FA6',
             headers={'X-API-KEY': 'api-key'}
         )
 
     def test_historical_candles_bearer_token(self, bearer_client, mocker):
         futopt = bearer_client.futopt
         mock_get = _configure_get(mocker.patch('requests.get'))
-        futopt.historical.candles(symbol='2330')
+        futopt.historical.candles(product='TXF')
         mock_get.assert_called_once_with(
-            'https://api.fugle.tw/marketdata/v1.0/futopt/historical/candles/2330',
+            'https://api.fugle.tw/marketdata/v1.0/futopt/historical/candles/TXF',
             headers={'Authorization': 'Bearer bearer-token'}
+        )
+
+    def test_historical_candles_forwards_query_and_response(self, mocker, api_key_client):
+        futopt = api_key_client.futopt
+        mock_get = _configure_get(mocker.patch('requests.get'))
+        expected_response = {
+            'product': 'TXF',
+            'session': 'afterhours',
+            'data': [{'date': '2026-09-15', 'close': 21000}],
+        }
+        mock_get.return_value.json.return_value = expected_response
+
+        response = futopt.historical.candles(
+            product='TXF',
+            contractMonth='1!',
+            from_='2026-09-01',
+            to='2026-09-15',
+            timeframe='5',
+            fields='open,close,average,transaction',
+            session='afterhours',
+            sort='asc',
+        )
+
+        assert response == expected_response
+        mock_get.assert_called_once_with(
+            'https://api.fugle.tw/marketdata/v1.0/futopt/historical/candles/TXF?'
+            'contractMonth=1%21&to=2026-09-15&timeframe=5&'
+            'fields=open%2Cclose%2Caverage%2Ctransaction&session=afterhours&'
+            'sort=asc&from=2026-09-01',
+            headers={'X-API-KEY': 'api-key'}
         )
 
     def test_historical_daily_api_key(self, mocker, api_key_client):

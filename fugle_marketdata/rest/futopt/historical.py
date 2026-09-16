@@ -8,5 +8,5 @@ class Historical(BaseRest):
         return self.request(f"historical/daily/{symbol}", **params)
 
     def candles(self, **params):
-        symbol = urlquote(params.pop('symbol'), safe='')
-        return self.request(f"historical/candles/{symbol}", **params)
+        product = urlquote(params.pop('product'), safe='')
+        return self.request(f"historical/candles/{product}", **params)
