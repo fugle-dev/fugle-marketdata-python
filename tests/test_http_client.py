@@ -576,19 +576,37 @@ class TestFutOptRestHistoricalClient:
     def test_historical_daily_api_key(self, mocker, api_key_client):
         futopt = api_key_client.futopt
         mock_get = _configure_get(mocker.patch('requests.get'))
-        futopt.historical.daily(symbol='2330')
+        futopt.historical.daily(product='TXO')
         mock_get.assert_called_once_with(
-            'https://api.fugle.tw/marketdata/v1.0/futopt/historical/daily/2330',
+            'https://api.fugle.tw/marketdata/v1.0/futopt/historical/daily/TXO',
             headers={'X-API-KEY': 'api-key'}
         )
 
     def test_historical_daily_bearer_token(self, bearer_client, mocker):
         futopt = bearer_client.futopt
         mock_get = _configure_get(mocker.patch('requests.get'))
-        futopt.historical.daily(symbol='2330')
+        futopt.historical.daily(product='TXO')
         mock_get.assert_called_once_with(
-            'https://api.fugle.tw/marketdata/v1.0/futopt/historical/daily/2330',
+            'https://api.fugle.tw/marketdata/v1.0/futopt/historical/daily/TXO',
             headers={'Authorization': 'Bearer bearer-token'}
+        )
+
+    def test_historical_daily_query_params(self, mocker, api_key_client):
+        futopt = api_key_client.futopt
+        mock_get = _configure_get(mocker.patch('requests.get'))
+        futopt.historical.daily(product='TXF', date='2026-10-02', contractMonth='1!', session='afterhours')
+        mock_get.assert_called_once_with(
+            'https://api.fugle.tw/marketdata/v1.0/futopt/historical/daily/TXF?date=2026-10-02&contractMonth=1%21&session=afterhours',
+            headers={'X-API-KEY': 'api-key'}
+        )
+
+    def test_historical_daily_deprecated_symbol(self, mocker, api_key_client):
+        futopt = api_key_client.futopt
+        mock_get = _configure_get(mocker.patch('requests.get'))
+        futopt.historical.daily(symbol='TXF')
+        mock_get.assert_called_once_with(
+            'https://api.fugle.tw/marketdata/v1.0/futopt/historical/daily/TXF',
+            headers={'X-API-KEY': 'api-key'}
         )
 
 
