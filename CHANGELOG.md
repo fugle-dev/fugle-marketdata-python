@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.8.0rc1](https://github.com/fugle-dev/fugle-marketdata-python/compare/2.7.0...2.8.0rc1) (2026-10-06)
+
+
+### Features
+
+* **futopt:** historical daily takes product; symbol is deprecated ([72f6092](https://github.com/fugle-dev/fugle-marketdata-python/commit/72f6092b11d61bd921bd6ec692ccceb551d55142))
+
 ## [2.7.0](https://github.com/fugle-dev/fugle-marketdata-python/compare/2.6.0...2.7.0) (2026-09-30)
 
 
