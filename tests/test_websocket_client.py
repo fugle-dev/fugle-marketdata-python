@@ -6,6 +6,7 @@ from fugle_marketdata.websocket.futopt.client import WebSocketFutOptClient
 from fugle_marketdata.websocket.stock.client import WebSocketStockClient
 import pytest
 import websocket
+from fugle_marketdata.constants import CONNECTION_CLOSED_MESSAGE
 import asyncio
 
 
@@ -426,3 +427,48 @@ class TestWebSocketClientConfigKeys:
         # factory 的 `base_url` 是 host prefix，跟 client 的完整 endpoint 同名異義，
         # 所以不沿用——留著會是個看起來合理、意思卻不同的值。
         assert 'base_url' not in futopt.config
+
+
+class TestWebSocketConnect:
+    @staticmethod
+    def _connect_in_thread(client):
+        outcome = {}
+
+        def run():
+            try:
+                client.connect()
+            except Exception as error:
+                outcome['error'] = error
+
+        worker = threading.Thread(target=run, daemon=True)
+        worker.start()
+        worker.join(timeout=2)
+        return worker, outcome
+
+    def test_connect_raises_when_socket_fails_to_open(self, monkeypatch):
+        refused = ConnectionRefusedError('connection refused')
+
+        # websocket-client 連不上時：呼叫 on_error、on_close 後 run_forever() 就返回，
+        # on_open 從頭到尾不會被呼叫，所以也不會開始認證。
+        def failing_run_forever(app, *args, **kwargs):
+            app.on_error(app, refused)
+            app.on_close(app, None, None)
+
+        monkeypatch.setattr(websocket.WebSocketApp, 'run_forever', failing_run_forever)
+        client = CoreWebSocketClient(url='wss://ws.example.com/stock/streaming', api_key='api-key')
+        client.on('error', lambda error: None)
+
+        worker, outcome = self._connect_in_thread(client)
+        assert not worker.is_alive(), 'connect() 在連線失敗後仍然卡住'
+        assert outcome['error'] is refused
+
+    def test_connect_raises_when_socket_closes_without_error(self, monkeypatch):
+        def closing_run_forever(app, *args, **kwargs):
+            app.on_close(app, None, None)
+
+        monkeypatch.setattr(websocket.WebSocketApp, 'run_forever', closing_run_forever)
+        client = CoreWebSocketClient(url='wss://ws.example.com/stock/streaming', api_key='api-key')
+
+        worker, outcome = self._connect_in_thread(client)
+        assert not worker.is_alive(), 'connect() 在連線關閉後仍然卡住'
+        assert str(outcome['error']) == CONNECTION_CLOSED_MESSAGE

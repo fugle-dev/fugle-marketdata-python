@@ -8,6 +8,7 @@ from threading import Thread, Timer
 from ..constants import (
     AUTHENTICATION_TIMEOUT_MESSAGE,
     CONNECT_EVENT,
+    CONNECTION_CLOSED_MESSAGE,
     DISCONNECT_EVENT,
     MESSAGE_EVENT,
     ERROR_EVENT,
@@ -162,6 +163,7 @@ class WebSocketClient():
                 self.error = Exception(UNAUTHENTICATED_MESSAGE)
 
     def __on_error(self, ws, error):
+        self.__last_error = error
         self.ee.emit(ERROR_EVENT, error)
 
     def on(self, event, listener):
@@ -222,13 +224,20 @@ class WebSocketClient():
             self.disconnect()
 
     def connect(self):
-        Thread(target=self.__ws.run_forever).start()
-        while True:
-            if self.auth_status in [AuthenticationState.AUTHENTICATED, AuthenticationState.UNAUTHENTICATED]:
+        self.__last_error = None
+        thread = Thread(target=self.__ws.run_forever)
+        thread.start()
+        while self.auth_status not in [AuthenticationState.AUTHENTICATED, AuthenticationState.UNAUTHENTICATED]:
+            if not thread.is_alive():
+                # run_forever() has returned (e.g. the socket never opened), so
+                # nothing will update auth_status anymore.
+                self.error = self.__last_error or Exception(CONNECTION_CLOSED_MESSAGE)
                 break
+            thread.join(0.01)
         if self.error is not None:
             self.__ws.close()
-            self.auth_timer.cancel()
+            if self.auth_timer is not None:
+                self.auth_timer.cancel()
             raise self.error
 
     def disconnect(self):
